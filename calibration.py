@@ -2,7 +2,7 @@ import import_ipynb
 import lorentzian_fit
 
 from data.data_loader import read_data
-from lmfit import Model, Parameter, fit
+from lmfit import Model, Parameter
 
 reference = {
     'mercury' : {
@@ -12,10 +12,13 @@ reference = {
 
 }
 
+def extract_fit_data(fit):
+
+    amp, cen, scale = fit.params['amp'], fit.params['cen'], fit.params['scale']
+
 def get_band(file):
-    """
-    Given file, runs Athira's lorenzian_fit in order to extract a mean and "scale" (~width) 
-    """
+
+    data = read_data
     
     raise NotImplementedError
     return mean, scale

@@ -12,7 +12,7 @@ def read_data(file_path):
 
             line = row.split("\t")
 
-            print (line)
+            #print (line)
 
             data = np.append(data, [[float(line[1]), float(line[2])]], axis = 0)
 
