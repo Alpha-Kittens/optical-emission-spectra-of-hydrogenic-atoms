@@ -1,5 +1,5 @@
 import import_ipynb
-import lorentzian_fit
+from lorentzian_fit import fit_to_lorentzian
 
 from data.data_loader import read_data
 from lmfit import Model, Parameter
@@ -14,14 +14,14 @@ reference = {
 
 def extract_fit_data(fit):
 
-    amp, cen, scale = fit.params['amp'], fit.params['cen'], fit.params['scale']
+    return fit.params['amp'], fit.params['cen'], fit.params['scale']
+
 
 def get_band(file):
 
     data = read_data
-    
-    raise NotImplementedError
-    return mean, scale
+    fit = fit_to_lorentzian(data)
+    return extract_fit_data(fit)
 
 
 def get_calibration_data(files):
@@ -31,6 +31,14 @@ def get_calibration_data(files):
     """
 
     raise NotImplementedError
+
+    for file in files:
+
+        band_data = get-band(file)
+
+        #do a thing
+
+    return "whatever lol xd"
 
 def fit_calibration(files, element):
 
