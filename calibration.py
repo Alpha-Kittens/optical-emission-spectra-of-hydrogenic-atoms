@@ -6,9 +6,16 @@ from lmfit import Model, Parameter
 
 reference = {
     'mercury' : {
-        'reference' : [],
-        'check' : [],
+        'reference' : [3650.15, 4046.56, 4368.33, 5460.74, 5769.60, 5790.66],
+        'check' : [], # TODO
     },
+    'hydrogen' : {
+        'reference' : [],
+    },
+    'sodium' : {
+        'reference' : [],
+    },
+
 
 }
 
@@ -30,21 +37,37 @@ def get_calibration_data(files):
     Returs centers and weights
     """
 
-    raise NotImplementedError
-
+    centers = []
+    widths = []
     for file in files:
 
-        band_data = get-band(file)
+        band_details = get_band(file)
+        centers.append(band_details[0])
+        widths.append(band_details[1])
 
-        #do a thing
-
-    return "whatever lol xd"
+    return centers, widths
 
 def fit_calibration(files, element):
 
+    centers, widths = get_calibration_data(files)
+
+    #sort centers
+
+    residuals = [abs(centers[i] - reference[element]['reference'][i]) for i in range(len(centers))]
+
+    #what do we expect? Try quadratic.
+
+    quadratic = lambda x, a, b, c : a * x ** 2 + b * x + c
+
+    model = Model(quadratic)
+
+    result = model.fit(centers, reference[element]['reference']) # weight by widths
+
+    return quadratic, (result.params['a'], result.params['b'], result.params['c'])
+
     raise NotImplementedError
 
-def check_calibration(c_function, references):
+def check_calibration(model, files, element):
     """
     Given a list of smaller-line calibration references, checks validity of fit. 
     """
