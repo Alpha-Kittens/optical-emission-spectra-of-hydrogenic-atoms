@@ -1,6 +1,17 @@
 import numpy as np
 
 def read_data(file_path):
+    """
+    Reads scanning data from given file.
+
+    Arguments: 
+        * `file_path` (str): string containing the relative location of the file from the directory containing the function call.
+
+    Returns: 
+        * `data` (nx2 numpy array): numpy array (matrix) with 2 columns:
+            - First column is wavelength in Angstroms
+            - Second column is measured counts per second
+    """
     
     data = np.array([[0,0]])
 
