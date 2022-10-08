@@ -14,7 +14,13 @@ loader.read_data()
 
 def fit_to_lorentzian(data):
     """
-    Given 
+    Given data from a scan, fits a lorentzian to it. Outdated--better to use voigt. 
+
+    Arguments:
+        * `data` (nx2 numpy array): 2 columns. First is wavelength in angstroms, second is measured counts per second. 
+
+    Returns:
+        * `result` (ModelResult): returned by model.fit
     """
     #type of data is numpy array w/ 2 columns
     def Lorentzian(x, amp, cen, scale):
