@@ -41,7 +41,10 @@ def reduce_noise (data, plot = False):
         plt.plot(x, new_data)
         plt.show()
 
-    return new_data, 1/errors
+    # Make a nx2 numpy to return
+    new_data_array = np.column_stack((x,new_data))
+
+    return new_data_array, 1/errors
 
 def sophisticated_bandpass(amplitudes, damping_constant = 1/10):
     """
@@ -61,7 +64,7 @@ def sophisticated_bandpass(amplitudes, damping_constant = 1/10):
             `removed_amplitudes` (numpy array of same dimension as `amplitudes`): Array of removed amplitudes. These two should sum to the original. 
     """
 
-    cutoff = get_cutoff(np.abs(amplitudes), 0)
+    cutoff = get_cutoff(np.abs(amplitudes))
     signals, backgrounds = get_regions(np.abs(amplitudes), cutoff, reduce = False)
 
     #new_amplitudes = np.where(np.abs(amplitudes) > cutoff, amplitudes, 0)
@@ -108,7 +111,7 @@ def bandpass(frequencies, amplitudes):
 
     from max_model import get_cutoff
 
-    cutoff = get_cutoff(np.abs(amplitudes), 0)
+    cutoff = get_cutoff(np.abs(amplitudes))
 
     return np.where(np.abs(amplitudes) > cutoff, amplitudes, 0), np.where(np.abs(amplitudes) <= cutoff, amplitudes, 0)
 

@@ -50,7 +50,7 @@ for wavelength in information:
         data = data_loader.read_data(wavelength[str(i) + "_fp"])
 
         # Noise reduction and find Uncertainties
-        #new_data, weights = noise_reduction.reduce_noise(data)
+        new_data, weights = noise_reduction.reduce_noise(data)
 
 
         # Voigt Model & Fit
@@ -61,8 +61,8 @@ for wavelength in information:
 
         params = models.voigt_params(model, data)
 
-        #result = fit(model, data, params, weights)
-        result = fit(model, data, params)
+        result = fit(model,new_data, params, weights)
+        #result = fit(model, data, params)
 
         #lmfit.report_fit(result)
 
@@ -75,7 +75,6 @@ for wavelength in information:
 
     # Isotope shifts (deuterium wavelength - hydrogen wavelength)
     wavelength["shift"] = abs(wavelength["1_result"].best_values['center'] - wavelength["2_result"].best_values['center'])
-    print(wavelength["shift"])
 
 
 # Balmer Formula to find ratio of deuterium to proton mass

@@ -26,11 +26,11 @@ def fit (model, data, params=None, weights =None):
     x_axis = data[:, 0]
     y_axis = data[:, 1]
     
-    if(params == None and weights== None):
+    if(params is None and weights is None):
         result = model.fit(y_axis, x=x_axis)
-    elif (params == None):
+    elif (params is None):
         result = model.fit(y_axis, x=x_axis, weights=weights)
-    elif (weights == None):
+    elif (weights is None):
         result = model.fit(y_axis, params=params, x=x_axis)
     else:
         result = model.fit(y_axis, params=params, x=x_axis, weights=weights)
