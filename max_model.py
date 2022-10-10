@@ -2,35 +2,79 @@ import numpy as np
 from data.data_loader import read_data
 import matplotlib.pyplot as plt
 
-def get_max(data, weights):
+def get_max(data, standard_deviations = 2):
     """
     Given a list of spectrometer data, returns the max value of the peak and an 1-sigma uncertainty value based on the width of the peak. 
 
     Arguments:
         * `data` (nx2 numpy array): 2 columns. First is wavelength in angstroms, second is measured counts per second. 
-        * `weights` (numpy array length n): weights associated with each data point. May or may not how to use these idk
+        * `standard_deviations` (float): Estimation of number of standard deviations of the mean will be classified as signal. 
+            - For wider peaks, this is probably around 2.
+            - For narrower peaks, this is probably around 3. 
 
     Returns: 
         * As a 2-tuple: 
-            - `mu`: wavelength (in Angstroms) of the max value
-            - `sigma`: 1-sigma uncertainty value associated with width of peak. 
+            - `maxes`: Array of wavelengths (in Angstroms) of max values
+            - `widths`: Array of 1-sigma uncertainty values associated with width of each peak. 
     """
 
-    raise NotImplementedError
+    #raise NotImplementedError
+    
+    background, signals = regions(data[:,1])
+    print(len(signals))
+    print (signals)
 
-def regions(cps, weights, reduce = True):
+    standard_deviations = 2 # For more narrow peaks, may want to change this to 3? 
 
-    cutoff = get_cutoff(cps, weights)
+    maxes = [max(data[signal[0]:signal[1]+1, 1]) for signal in signals]
+    widths = [(signal[1] - signal[0])/2/standard_deviations for signal in signals]
+
+    return maxes, widths
+    
+
+     
+
+def regions(cps, reduce = True):
+    """
+    Given an array of positive values, determines a cutoff to distinguish signal from noise, then determines regions of indices
+    which correspond to background and signal data. 
+    
+    Arguments:
+        * `cps` (np array of positive values): Array for which cutoff is to be chosen
+    Keyword Arguments:
+        * `reduce` (Boolean): True if regions containing only one point should be removed; False otherwise. 
+            Generally should be set to True for wide signals.  
+
+    Returns:
+        * As a 2-array
+            - `backgrounds` (Array of tuples): Ranges of indices of `cps` classified as background
+            - `signals` (Array of tuples):  Ranges of indices of `cps` classified as signal
+    """
+
+    cutoff = get_cutoff(cps)
     return get_regions(cps, cutoff, reduce = reduce)
 
 def get_regions(cps, cutoff, reduce = False):
+    """
+    Given an array of positive values and a cutoff, determines signal and background regions of the data. 
+    
+    Arguments:
+        * `cps` (np array of positive values): Array for which cutoff is to be chosen
+        * `cutoff` (float): Classifying value. values of `cps` above `cutoff` are signals; otherwise background.
+    Keyword Arguments:
+        * `reduce` (Boolean): True if regions containing only one point should be removed; False otherwise. 
+            Generally should be set to True for wide signals.  
+
+    Returns:
+        * As a 2-array
+            - `backgrounds` (Array of tuples): Ranges of indices of `cps` classified as background
+            - `signals` (Array of tuples):  Ranges of indices of `cps` classified as signal
+    """
 
     background_regions = []
     signal_regions = []
 
     data_below = cps <= cutoff
-
-    #print (data_below)
     
     tracking_background = True
     start = 0
@@ -57,49 +101,31 @@ def get_regions(cps, cutoff, reduce = False):
 
 
 
-def get_cutoff(cps, weights):
+def get_cutoff(cps):
     """
-    Given an array of positive values and weights, determines a cutoff do distinguish signal from noise. This algorithm is not particularly refined.
+    Given an array of positive values, determines a cutoff do distinguish signal from noise. This algorithm is not particularly refined.
     
     Arguments:
         * `cps` (np array of positive values): Array for which cutoff is to be chosen
-        * `weights` (np array of same dimension): Weights corresponding to `cps` values. Unused by method. 
     Returns:
         * `cutoff` (float): signal/noise cutoff for `cps` array. 
     """
 
-    #print(np.histogram(cps, max(cps) // min(cps)))
-
-    #print (int(max(cps) // min(cps)))
-
-    print (max(cps))
-    print (min(cps))
-
-    print (int(max(cps) // min(cps)))
-
     hist, binedges = np.histogram(cps, int(max(cps) // min(cps)))
-
-    print (hist, "\n", binedges)
-
-    #print (hist)
-    #print (binedges)
 
     cutoff = 1 + int(max(cps) // min(cps) / 100)
 
     print ("The cutoff is ", binedges[cutoff], ". ", np.sum(hist[cutoff:]), "/", np.sum(hist), " of the data is above the cutoff.")
 
-    bincenters = (binedges[1:] + binedges[:-1]) / 2
-    #plt.bar(bincenters, hist, width = (binedges[-1] - binedges[0]) / len(hist))
-    #plt.show()
-
     return binedges[cutoff]
 
-    #return hist, binedges
 
 if __name__ == "__main__":
 
-    data = read_data("data/DeuteriumScans/SuperFineScans/alpha4H")
+    data = read_data("data/DeuteriumScans/FineScans/alpha1")
     
+    print(get_max(data, 0))
+    """
     x, y = data[:,0], data[:,1]
 
     ysize = y.size
@@ -137,3 +163,4 @@ if __name__ == "__main__":
 
     #plt.plot()
     #plt.show()
+    """
