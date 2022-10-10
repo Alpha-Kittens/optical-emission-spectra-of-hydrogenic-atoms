@@ -34,7 +34,6 @@ result = fit_to_voigt(data)
 #show_results(result)
 
 lmfit.report_fit(result)
-plt.figure()
-plt.figure(figsize=(100, 100))
+
 result.plot()
 plt.show()
