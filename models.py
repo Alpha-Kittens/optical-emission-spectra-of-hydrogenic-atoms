@@ -30,6 +30,19 @@ def quadratic(x, a, b, c):
     return (a*(x**2)) + (b*x) + c
 
 def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err):
+    """
+    Error for result of quadratic model
+
+    Arguments:
+        * `x` : parameter value to evaluate function
+        * `x_err` : error associated with `x`
+        * `a` : leading coefficient
+        * `a_err` : error associated with `a`
+        * `b` : linear coefficient
+        * `b_err` : error associated with `b`
+        * `c` : y-intercept
+        * `c_err` : error associated with `c`
+    """
 
     x_rel = x_err / x
     a_rel = a_err / a
