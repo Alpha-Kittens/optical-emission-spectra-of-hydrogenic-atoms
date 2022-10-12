@@ -70,7 +70,7 @@ for key in data:
 
 # Quadratic Model and Fit
 
-calibration_model = quadratic
+calibration_model = lmfit.Model(quadratic)
 calibration_error = quadratic_err
 
 inputs = np.zeros((len(results_reference), 2))
@@ -81,7 +81,7 @@ result = fit(model, inputs, weights = error_reference)
 
 a, b, c = result.params['a'], result.params['b'], result.params['c']
 
-calibration = lambda x : calibration_model(x, a, b, c)
+calibration = lambda x : quadratic(x, a, b, c)
 a_err = -1 #result.params['a'].stderr
 b_err = -1 #result.params['b'].stderr
 c_err = -1 #result.params['c'].stderr

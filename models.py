@@ -30,11 +30,44 @@ def quadratic(x, a, b, c):
     """
     return (a*(x**2)) + (b*x) + c
 
-def voigt_with_shift(x, amplitude, center, sigma, a):
+def eval_voigt_with_shift(x, amplitude, center, sigma, a):
 
     voigt_model = lmfit.models.VoigtModel()
     params = voigt_model.make_params(amplitude=amplitude, center=center, sigma = sigma)
-    return voigt_model.eval(params, x) + a
+    return voigt_model.eval(params, x = x) + a
+
+def voigt_with_shift():
+
+    return lmfit.Model(eval_voigt_with_shift)
+
+def shifted_voigt_params(model, data):
+
+    """
+    returns initial parameters to input for a voigt_model
+
+    Arguments: 
+        * `model` (VoigtModel): the model to make intial values for
+        * `data`  (nx2 numpy array): numpy array (matrix) with 2 columns:
+            - First column is x-axis (input to Model)
+            - Second column is y-axis (output of Model)
+
+    Returns: 
+        * `params` (Parameters) with intial values based on data
+    """
+    x_axis = data[:, 0]
+    y_axis = data[:, 1]
+
+    start_amp = max(y_axis)
+    start_cen = x_axis[np.argmax(y_axis)]
+
+    params = lmfit.Parameters()
+    params.add('amplitude', value = start_amp)
+    params.add('center', value = start_cen)
+    params.add('sigma', value = 0.5)
+    params.add('a', value = 400)
+
+
+    return params  
 
 def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err):
     """

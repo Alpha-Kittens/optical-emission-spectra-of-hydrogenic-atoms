@@ -113,7 +113,7 @@ def get_cutoff(cps):
 
     hist, binedges = np.histogram(cps, int(max(cps) // min(cps)))
 
-    cutoff = 1 + int(max(cps) // min(cps) / 100)
+    cutoff = 1 + int(max(cps) // min(cps) / 50)
 
     print ("The cutoff is ", binedges[cutoff], ". ", np.sum(hist[cutoff:]), "/", np.sum(hist), " of the data is above the cutoff.")
 

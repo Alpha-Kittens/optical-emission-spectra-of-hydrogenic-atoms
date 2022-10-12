@@ -41,25 +41,42 @@ delta = {
 '''
 
 #information = [alpha, beta, gamma, delta]
-information = [alpha, beta]
+#information = [alpha, beta]
+information = {
+    'alpha' : alpha,
+    'beta' : beta,
+    #'gamma' : gamma,
+    #'delta' : delta,
+}
+damping_constants = {
+    'alpha' : 1/10,
+    'beta' : 1/3,
+    #'gamma' : 1/10,
+    #'delta' : 1/10
+}
 
 # Run fits for each wavelength in information
-for wavelength in information:
+for key in information:
+
+    wavelength = information[key]
+
     for i in range(1, 3):
         # Read data
         data = data_loader.read_data(wavelength[str(i) + "_fp"])
 
         # Noise reduction and find Uncertainties
-        new_data, weights = noise_reduction.reduce_noise(data)
+        new_data, weights = noise_reduction.reduce_noise(data, damping_constants[key]) # damping constant default is 1/10
 
 
         # Voigt Model & Fit
         x_axis = data[:, 0]
         y_axis = data[:, 1]
 
-        model = lmfit.models.VoigtModel()
+        #model = lmfit.models.VoigtModel()
+        model = models.voigt_with_shift()
 
-        params = models.voigt_params(model, data)
+        #params = models.voigt_params(model, data)
+        params = models.shifted_voigt_params(model, data)
 
         result = fit(model,new_data, params, weights)
         #result = fit(model, data, params)

@@ -32,7 +32,7 @@ def reduce_noise (data, damping_constant = 1/10, plot = False):
     new_data = ifft(new_amplitudes)
     removed = ifft(removed_amplitudes)
 
-    neighborhood = int(len(x) // 40)
+    neighborhood = max(int(len(x) // 40), 10)
 
     errors = np.array([np.sqrt(np.sum(removed[max(i - neighborhood, 0):min(i + neighborhood + 1, len(removed))] ** 2) / (min(i + neighborhood + 1, len(removed)) - max(i - neighborhood, 0))) for i in range(len(removed))])
 
@@ -167,6 +167,6 @@ def plot(x, y, title, xlabel, ylabel, show = True):
         plt.show()
 
 if __name__ == "__main__":
-    file = "data/DeuteriumScans/SuperFineScans/alpha4H"
+    file = 'data/DeuteriumScans/SuperFineScans/beta2H'
     data = read_data(file)
-    reduce_noise(data)
+    reduce_noise(data, damping_constant = 1/3, plot = True)
