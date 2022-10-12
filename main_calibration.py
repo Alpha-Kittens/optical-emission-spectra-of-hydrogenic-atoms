@@ -107,3 +107,11 @@ plt.plot(data_check, calibration_test)
 plt.plot(data_check, wavelengths['check'])
 plt.show()
 
+#score the model/quantify performance
+
+def apply_model():
+    """ 
+    Applies the found calibration model. Can be imported by other functions. 
+    """
+
+    pass
