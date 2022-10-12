@@ -74,11 +74,11 @@ for key in information:
 
         #model = lmfit.models.VoigtModel()
         model = models.voigt_with_shift()
-        #model = models.two_voigts()
+        #model = models.two_voigts() #not working
 
         #params = models.voigt_params(model, data)
         params = models.shifted_voigt_params(model, data)
-        #params = models.two_voigt_params(model, data)
+        #params = models.two_voigt_params(model, data) #not working
 
         result = fit(model, data, params, weights)
         #result = fit(model, data, params)

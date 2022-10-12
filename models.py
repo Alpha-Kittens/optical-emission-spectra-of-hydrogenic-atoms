@@ -1,6 +1,7 @@
 import numpy as np
 import lmfit
 #import random
+from max_model import regions
 
 def linear(x, m, b):
     """
@@ -99,18 +100,29 @@ def two_voigt_params(model, data):
     y_axis = data[:, 1]
 
     start_amp = max(y_axis)
-    start_cen = x_axis[np.argmax(y_axis)]
-    start_sigma = 0.5
+    signals = regions(y_axis)[1]
+    amplitudes = [max(y_axis[signal[0]:signal[1]+1]) for signal in signals]
+
+    i1 = np.argmax(amplitudes)
+    max1 = amplitudes[i1]
+    i2 = np.argmin(np.where(amplitudes == max1, 0, amplitudes))
+    max2 = amplitudes[i2]
+    maxes = [max1, max2]
+    indices = [i1, i2]
+
+    start_cen1, start_cen2 = (x_axis[np.argmax(y_axis[signals[indices[i]][0]:signals[indices[i]][1]])] for i in range(2))
+    start_sigma1, start_sigma2 = (1/2 * (x_axis[signals[indices[i]][1]] - x_axis[signals[indices[i]][0]]) for i in range(2))
+    start_amplitude1, start_amplitude2 = maxes
     start_a = min(y_axis)
 
     # consider: using regions to establish two independetn peaks
     params = lmfit.Parameters()
-    params.add('amplitude1', value = start_amp)
-    params.add('center1', value = start_cen + abs(start_sigma / 5))
-    params.add('sigma1', value = start_sigma)
-    params.add('amplitude2', value = start_amp)
-    params.add('center2', value = start_cen - abs(start_sigma / 5))
-    params.add('sigma2', value = start_sigma)
+    params.add('amplitude1', value = start_amplitude1)
+    params.add('center1', value = start_cen1)
+    params.add('sigma1', value = start_sigma1)
+    params.add('amplitude2', value = start_amplitude2)
+    params.add('center2', value = start_cen2)
+    params.add('sigma2', value = start_sigma2)
     params.add('a', value = start_a)
 
     return params
