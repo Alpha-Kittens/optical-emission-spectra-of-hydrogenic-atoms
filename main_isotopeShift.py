@@ -74,17 +74,25 @@ for key in information:
 
         #model = lmfit.models.VoigtModel()
         model = models.voigt_with_shift()
+        #model = models.two_voigts()
 
         #params = models.voigt_params(model, data)
         params = models.shifted_voigt_params(model, data)
+        #params = models.two_voigt_params(model, data)
 
-        result = fit(model,new_data, params, weights)
+        result = fit(model, data, params, weights)
         #result = fit(model, data, params)
 
         #lmfit.report_fit(result)
+        
+        print(lmfit.fit_report(result))
 
-        result.plot()
+
+        result.plot(datafmt = '.')
+        plt.plot(x_axis, new_data[:,1], '-', color = 'r', label = 'noise-reduced')
+        plt.legend()
         plt.show()
+
 
         wavelength[str(i) + "_result"] = result
 

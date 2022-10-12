@@ -1,5 +1,6 @@
 import numpy as np
 import lmfit
+#import random
 
 def linear(x, m, b):
     """
@@ -59,15 +60,60 @@ def shifted_voigt_params(model, data):
 
     start_amp = max(y_axis)
     start_cen = x_axis[np.argmax(y_axis)]
+    start_a = min(y_axis)
 
     params = lmfit.Parameters()
     params.add('amplitude', value = start_amp)
     params.add('center', value = start_cen)
     params.add('sigma', value = 0.5)
-    params.add('a', value = 400)
+    params.add('a', value = start_a)
 
 
     return params  
+
+def eval_two_voigts(x, amplitude1, center1, sigma1, amplitude2, center2, sigma2, a):
+    voigt_model = lmfit.models.VoigtModel()
+    params1 = voigt_model.make_params(amplitude=amplitude1, center=center1, sigma = sigma1)
+    params2 = voigt_model.make_params(amplitude=amplitude2, center=center2, sigma = sigma2)
+    return voigt_model.eval(params1, x = x) + voigt_model.eval(params2, x = x) + a
+
+def two_voigts():
+
+    return lmfit.Model(eval_two_voigts)
+
+def two_voigt_params(model, data):
+
+    """
+    returns initial parameters to input for a voigt_model
+
+    Arguments: 
+        * `model` (VoigtModel): the model to make intial values for
+        * `data`  (nx2 numpy array): numpy array (matrix) with 2 columns:
+            - First column is x-axis (input to Model)
+            - Second column is y-axis (output of Model)
+
+    Returns: 
+        * `params` (Parameters) with intial values based on data
+    """
+    x_axis = data[:, 0]
+    y_axis = data[:, 1]
+
+    start_amp = max(y_axis)
+    start_cen = x_axis[np.argmax(y_axis)]
+    start_sigma = 0.5
+    start_a = min(y_axis)
+
+    # consider: using regions to establish two independetn peaks
+    params = lmfit.Parameters()
+    params.add('amplitude1', value = start_amp)
+    params.add('center1', value = start_cen + abs(start_sigma / 5))
+    params.add('sigma1', value = start_sigma)
+    params.add('amplitude2', value = start_amp)
+    params.add('center2', value = start_cen - abs(start_sigma / 5))
+    params.add('sigma2', value = start_sigma)
+    params.add('a', value = start_a)
+
+    return params
 
 def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err):
     """

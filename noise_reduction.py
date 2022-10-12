@@ -44,7 +44,7 @@ def reduce_noise (data, damping_constant = 1/10, plot = False):
     # Make a nx2 numpy to return
     new_data_array = np.column_stack((x,new_data))
 
-    return new_data_array, 1/errors
+    return np.real(new_data_array), np.real(1/errors)
 
 def sophisticated_bandpass(amplitudes, damping_constant = 1/10):
     """
