@@ -36,6 +36,29 @@ def voigt_with_shift(x, amplitude, center, sigma, a):
     params = voigt_model.make_params(amplitude=amplitude, center=center, sigma = sigma)
     return voigt_model.eval(params, x) + a
 
+def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err):
+    """
+    Error for result of quadratic model
+
+    Arguments:
+        * `x` : parameter value to evaluate function
+        * `x_err` : error associated with `x`
+        * `a` : leading coefficient
+        * `a_err` : error associated with `a`
+        * `b` : linear coefficient
+        * `b_err` : error associated with `b`
+        * `c` : y-intercept
+        * `c_err` : error associated with `c`
+    """
+
+    x_rel = x_err / x
+    a_rel = a_err / a
+    b_rel = b_err / b
+    c_rel = c_err / c
+
+    return ((a * x**2)**2 * (a_rel**2 + 2 * x_rel**2) + (b * x)**2 * (b_rel ** 2 + x_rel**2) + c_err ** 2) ** (1/2)
+
+
 def voigt_params(model, data):
     """
     returns initial parameters to input for a voigt_model
@@ -59,4 +82,9 @@ def voigt_params(model, data):
 
     return params
 
-    
+def extract_voigt(result):
+    """
+    returns amplitude, center, sigma
+    """
+
+    return result.params['amplitude'], result.params['center'], result.params['sigma']

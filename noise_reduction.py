@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from data.data_loader import read_data
 from max_model import get_cutoff, get_regions
 
-def reduce_noise (data, plot = False):
+def reduce_noise (data, damping_constant = 1/10, plot = False):
     """
     Given data, uses a fourier bandpass filter to reduce noise and estimate uncertainty of each counts per second measurement. 
     
@@ -27,7 +27,7 @@ def reduce_noise (data, plot = False):
 
     frequencies, amplitudes = fftfreq(ysize, step), fft(y)
 
-    new_amplitudes, removed_amplitudes = sophisticated_bandpass(amplitudes)
+    new_amplitudes, removed_amplitudes = sophisticated_bandpass(amplitudes, damping_constant = damping_constant)
 
     new_data = ifft(new_amplitudes)
     removed = ifft(removed_amplitudes)
