@@ -95,23 +95,34 @@ calibration_error = lambda x, x_err : quadratic_err(x, x_err, a, a_err, b, b_err
 
 # Test quadratic model
 # better way of doing this with arrays probably exists
+if __name__ == "__main__":
+    
+    data_check = np.array([data['check'][i][0] for i in range(len(data['check']))])
+    data_check_err = np.array([data['check'][i][1] for i in range(len(data['check']))])
+    calibration_test = calibration(data_check)
+    calibration_test_err = calibration_error(data_check, data_check_err)
 
-data_check = np.array([data['check'][i][0] for i in range(len(data['check']))])
-data_check_err = np.array([data['check'][i][1] for i in range(len(data['check']))])
-calibration_test = calibration(data_check)
-calibration_test_err = calibration_error(data_check, data_check_err)
+    residuals = calibration_test - np.array(wavelengths['check'])
 
-residuals = calibration_test - np.array(wavelengths['check'])
 
-plt.plot(data_check, calibration_test)
-plt.plot(data_check, wavelengths['check'])
-plt.show()
+    plt.plot(data_check, calibration_test)
+    plt.plot(data_check, wavelengths['check'])
+    plt.show()
 
 #score the model/quantify performance
 
-def apply_model():
+def apply_model(wavelength_measured, wavelength_error):
     """ 
     Applies the found calibration model. Can be imported by other functions. 
-    """
 
-    pass
+    Arguments: 
+        * `wavelength_measured` (float): wavelength measured as reported by the spectrometer
+        * `error` (float): error measurement of measured wavelength
+
+    Returns:
+        * As a 2-tuple:
+            - `wavelength` (float): corrected wavelength
+            - `wavelength_error` (float): error on corrected wavelength
+    """
+    
+    return calibration(wavelength_measured), calibration_error(wavelength_measured, wavelength_error)
