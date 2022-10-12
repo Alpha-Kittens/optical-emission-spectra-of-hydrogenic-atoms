@@ -1,4 +1,5 @@
 import numpy as np
+import lmfit
 
 def linear(x, m, b):
     """
@@ -29,9 +30,15 @@ def quadratic(x, a, b, c):
     """
     return (a*(x**2)) + (b*x) + c
 
+def voigt_with_shift(x, amplitude, center, sigma, a):
+
+    voigt_model = lmfit.models.VoigtModel()
+    params = voigt_model.make_params(amplitude=amplitude, center=center, sigma = sigma)
+    return voigt_model.eval(params, x) + a
+
 def voigt_params(model, data):
     """
-    returns initial parameters for a voigt_model
+    returns initial parameters to input for a voigt_model
 
     Arguments: 
         * `model` (VoigtModel): the model to make intial values for
