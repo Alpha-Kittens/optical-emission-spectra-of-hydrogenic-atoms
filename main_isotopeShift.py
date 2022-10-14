@@ -121,8 +121,7 @@ for key in information:
     # Balmer Formula to find ratio of deuterium to proton mass
     wavelength["ratio"] = 1/(1 - R_inf*(m_p/m_e)*wavelength["shift"]*(10**(-10))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
 
-    wavelength["ratio_unc_square"] = (wavelength["shift"]*(10**(-10))*((1/(nf**2)) - (1/(wavelength["ni"]**2)))*wavelength["shift_unc"]**2)/(wavelength["ratio"]**2)
-
+    wavelength["ratio_unc"] = ((wavelength["ratio"])**2)*R_inf*(m_p/m_e)*((1/(nf**2)) - (1/(wavelength["ni"]**2))) * wavelength["shift_unc"]*(10**(-10))
 
 # Mean
 sum = 0
@@ -157,7 +156,7 @@ print(total_shift_unc)
 sum = 0
 for key in information:
     wavelength = information[key]
-    sum += (wavelength["ratio_unc_square"])**2
+    sum += (wavelength["ratio_unc"])**2
 sys_unc = math.sqrt(sum)/math.sqrt(len(information))
 print(sys_unc)
 
