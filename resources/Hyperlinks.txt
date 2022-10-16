@@ -1,2 +1,4 @@
 ipynb importer:
-https://stackoverflow.com/questions/20186344/importing-an-ipynb-file-from-another-ipynb-file
+https://stackoverflow.com/questions/20186344/importing-an-ipynb-file-from-another-ipynb-file - unused
+https://physics.nist.gov/PhysRefData/Handbook/Tables/mercurytable2.htm - mercury spectrum data
+https://scipython.com/book/chapter-8-scipy/examples/the-voigt-profile/ - voigt model implementation
