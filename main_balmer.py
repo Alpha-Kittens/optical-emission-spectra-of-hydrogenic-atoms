@@ -8,14 +8,14 @@ import noise_reduction
 import math
 
 # File Path to peak data files
-folder = 'data/DeuteriumScans/SuperFineScans'
-alpha_H_fp  = folder + '/alpha4H'
+folder = 'data/10.14.22/hydrogen'
+alpha_H_fp  = folder + '/alpha-superfine-1'
 
-beta_H_fp = folder + '/beta2H'
+beta_H_fp = folder + '/beta-superfine-1'
 
-gamma_H_fp = folder + '/gamma1H'
+gamma_H_fp = folder + '/gamma-superfine-1'
 
-delta_H_fp = folder + '/delta2H'
+delta_H_fp = folder + '/delta-superfine-1'
 
 
 #Constants
@@ -37,25 +37,24 @@ gamma = {
     "fp" : gamma_H_fp,
     "ni"   : 5,
 }
-'''
 delta = {
     "fp" : delta_H_fp,
     "ni"   : 6,
 }
-'''
+
 
 information = {
     'alpha' : alpha,
     'beta' : beta,
     'gamma' : gamma,
-    #'delta' : delta,
+    'delta' : delta,
 }
 
 damping_constants = {
     'alpha' : 1/10,
     'beta' : 1/3,
     'gamma' : 1/10,
-    #'delta' : 1/10
+    'delta' : 1/10
 }
 
 # Run fits for each wavelength in information
