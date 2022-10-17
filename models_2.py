@@ -70,6 +70,10 @@ def inverse_quadratic(true, a, b, c):
 
     return (-b + np.sqrt(b ** 2 - 4 * a * (c - true))) / (2 * a)
 
+def linear_plus_osc(x, a, b, n, omega, phi):
+
+    return a*x + b + n*np.sin(omega * x - phi)
+
 def voigt(x, amp, mu, alpha, gamma):
     """
     Voigt, i.e. gaussian convolved with lorentzian

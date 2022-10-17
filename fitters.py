@@ -9,6 +9,49 @@ from numpy import exp, pi, sqrt
 import lmfit
 from max_model import regions
 from noise_reduction import reduce_noise
+from models import voigt_models
+
+
+def execute_peak_fit(data, shift = 0, plot = False):
+
+    new_data, weights = reduce_noise(data)
+    
+    i = primary_signal_region(data)
+    
+    if shift == 0:
+        choice = 'voigt_with_shift'
+        params = voigt_models[choice][1](data[i,:], shift)
+    else:
+        choice = 'two_voigt'
+        params = voigt_models[choice][1](data[i,:])
+    
+    model = lmfit.Model(voigt_models[choice][0])
+
+    result = fit(model, data[i,:], params, weights[i])
+
+    amp, mu, alpha, gamma = result.params['amp'].value, result.params['mu'].value, result.params['alpha'].value, result.params['gamma'].value
+    mu_err = result.params['mu'].stderr
+    #different handling for double peaks with similar amplitude?
+
+    if 'a' in result.params.keys():
+        a = result.params['a'].value
+    else:
+        a = 0
+
+    if 'mu2' in result.params.keys():
+        amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
+                
+    if plot:
+        plt.scatter(data[i,0], data[i,1], marker = '.', label = "data")
+        plt.plot(data[i,0], voigt_models['voigt_with_shift'][0](data[i,0], amp, mu, alpha, gamma, a), label = "primary peak", color = "orange")
+        if choice == 'two_voigt':
+            amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
+            plt.plot(data[i,0], voigt_models[choice][0](data[i,0], amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a), label = "full fit", color = "lime")
+        plt.axvline(x = mu, label = "wavelength estimate", linestyle = '--', color = 'r')
+        plt.legend()
+        plt.show()
+
+    return mu, mu_err
 
 
 def primary_signal_region (data):
