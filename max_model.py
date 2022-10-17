@@ -34,6 +34,8 @@ def get_max(data, standard_deviations = 2):
 
      
 
+
+
 def regions(cps, reduce = True):
     """
     Given an array of positive values, determines a cutoff to distinguish signal from noise, then determines regions of indices

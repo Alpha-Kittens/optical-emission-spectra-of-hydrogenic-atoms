@@ -7,6 +7,25 @@ import scipy.stats as stats
 from scipy.stats import norm, chi2 # normal distribution, chi squared distribution
 from numpy import exp, pi, sqrt
 import lmfit
+from max_model import regions
+from noise_reduction import reduce_noise
+
+
+def primary_signal_region (data):
+
+    backgrounds, signals = regions(data[:,1])
+
+    maxval = 0
+    max_signal = (0,1)
+    for signal in signals:
+        smax = max(data[:,1][signal[0]:signal[1]+1])
+        if smax > maxval:
+            maxval = smax
+            max_signal = signal
+    
+    i = np.array(range(len(data[:,1])))
+    return np.logical_and(i >= max_signal[0], i <= max_signal[1])
+
 
 def fit (model, data, params=None, weights =None):
     """

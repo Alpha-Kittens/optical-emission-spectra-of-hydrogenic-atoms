@@ -66,6 +66,10 @@ def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err):
 
     return ((a * x**2)**2 * (a_rel**2 + 2 * x_rel**2) + (b * x)**2 * (b_rel ** 2 + x_rel**2) + c_err ** 2) ** (1/2)
 
+def inverse_quadratic(true, a, b, c):
+
+    return (-b + np.sqrt(b ** 2 - 4 * a * (c - true))) / (2 * a)
+
 def voigt(x, amp, mu, alpha, gamma):
     """
     Voigt, i.e. gaussian convolved with lorentzian
@@ -179,7 +183,7 @@ def two_voigt_params(data, expected_shift, stepsize = 0.0025):
     params.add('mu2', value = start_mu2, min = 1e-6)
     params.add('alpha2', value = start_alpha, min = 0)
     params.add('gamma2', value = start_gamma)
-    params.add('a', min(data[:,1]))
+    params.add('a', min(data[:,1]), min = 0)
 
     return params
 

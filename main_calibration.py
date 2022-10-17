@@ -1,6 +1,6 @@
 from re import M
 from data.data_loader import read_data
-from fitters import fit
+from fitters import fit, primary_signal_region
 from models_2 import *
 from noise_reduction import reduce_noise
 import matplotlib.pyplot as plt
@@ -19,7 +19,8 @@ wavelengths = {
     # https://physics.nist.gov/PhysRefData/Handbook/Tables/mercurytable2.htm
     # possibly include parameter for hyperfine splitting
     'reference': [5790.663, 5769.598, 5460.735, 4046.563, 3650.153],
-    'check': [6562, 4861, 4340.47, 4101.74], #hydrogen
+    'check': []
+    #check': [6562, 4861, 4340.47, 4101.74], #hydrogen
 }
 
 
@@ -34,7 +35,8 @@ wavelengths_errors = {
 
 files = {
     'reference': ["5790.66-superfine", "5769.6-superfine", "5460.74-superfine", "4046.56-superfine_4", "3650.15-superfine"],
-    'check' : ["alpha-superfine-1", "beta-superfine-1", "gamma-superfine-1", "delta-superfine-1"],
+    #'check' : ["alpha-superfine-1", "beta-superfine-1", "gamma-superfine-1", "delta-superfine-1"],
+    'check' : [],
 }
 
 for key in ['reference']:
@@ -84,10 +86,12 @@ for key in data:
         new_data, weights = reduce_noise(entry)
 
         if plot:
-            plt.scatter(entry[:,0], entry[:,1], marker = '.', label = "data")
-            plt.plot(entry[:,0], new_data[:,1], label = "noise-reduced")
+            plt.scatter(entry[:,0], entry[:,1], marker = '.', label = "data", color = 'b')
+            plt.plot(entry[:,0], new_data[:,1], label = "noise-reduced", color = 'r')
             plt.legend()
             plt.show()
+
+        i = primary_signal_region(entry)
 
         shift = float(input("Estimate the splitting in that plot (Angstroms): "))
 
@@ -98,11 +102,11 @@ for key in data:
         
         model = lmfit.Model(voigt_models[choice][0])
         if choice == 'two_voigt':
-            params = voigt_models[choice][1](entry, shift)
+            params = voigt_models[choice][1](entry[i], shift)
         else:
-            params = voigt_models[choice][1](entry)
+            params = voigt_models[choice][1](entry[i])
 
-        result = fit(model, entry, params, weights)
+        result = fit(model, entry[i], params, weights[i])
 
         amp, mu, alpha, gamma = result.params['amp'].value, result.params['mu'].value, result.params['alpha'].value, result.params['gamma'].value
         mu_err = result.params['mu'].stderr
@@ -115,11 +119,11 @@ for key in data:
             
 
         if plot:
-            plt.scatter(entry[:,0], entry[:,1], marker = '.', label = "data")
-            plt.plot(entry[:,0], voigt_models['voigt_with_shift'][0](entry[:,0], amp, mu, alpha, gamma, a), label = "primary peak", color = "orange")
+            plt.scatter(entry[:,0][i], entry[:,1][i], marker = '.', label = "data")
+            plt.plot(entry[:,0][i], voigt_models['voigt_with_shift'][0](entry[:,0][i], amp, mu, alpha, gamma, a), label = "primary peak", color = "orange")
             if choice == 'two_voigt':
                 amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
-                plt.plot(entry[:,0], voigt_models[choice][0](entry[:,0], amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a), label = "full fit", color = "lime")
+                plt.plot(entry[:,0][i], voigt_models[choice][0](entry[:,0][i], amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a), label = "full fit", color = "lime")
             plt.axvline(x = mu, label = "wavelength estimate", linestyle = '--', color = 'r')
             plt.legend()
             plt.show()
@@ -181,9 +185,10 @@ calibration_error = lambda x, x_err : quadratic_err(x, x_err, a, a_err, b, b_err
 calibration_file = "calibration.py"
 
 with open(calibration_file, 'w') as f:
-    f.write("from models_2 import quadratic, quadratic_err\n")
+    f.write("from models_2 import quadratic, quadratic_err, inverse_quadratic\n")
     f.write("calibration = lambda x : quadratic(x, "+str(a)+","+str(b)+","+str(c)+")\n")
     f.write("calibration_error = lambda x, x_err : quadratic_err(x,x_err,"+str(a)+","+str(a_err)+","+str(b)+","+str(b_err)+","+str(c)+","+str(c_err)+")\n")
+    f.write("uncalibration = lambda true : inverse_quadratic(true,"+str(a)+","+str(b)+","+str(c)+")\n")
 
 plt.errorbar(measured_reference, wavelengths['reference'], error_reference, label = "calibration data", color = 'b', fmt = '.')
 x = np.linspace(min(measured_reference) - 100, max(measured_reference) + 100, 2010)
