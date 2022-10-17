@@ -60,6 +60,10 @@ def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err):
     b_rel = b_err / b
     c_rel = c_err / c
 
+    print ("a contribution: "+str(((a * x**2)**2 * (a_rel**2 + 2 * x_rel**2))**(1/2)))
+    print ("b contribution: "+str(((b * x)**2 * (b_rel ** 2 + x_rel**2))**(1/2)))
+    print ("c contribution: "+str(c_err))
+
     return ((a * x**2)**2 * (a_rel**2 + 2 * x_rel**2) + (b * x)**2 * (b_rel ** 2 + x_rel**2) + c_err ** 2) ** (1/2)
 
 def voigt(x, amp, mu, alpha, gamma):
