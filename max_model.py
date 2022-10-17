@@ -122,10 +122,9 @@ def get_cutoff(cps):
 
 if __name__ == "__main__":
 
-    data = read_data("data/DeuteriumScans/FineScans/alpha1")
-    
+    data = read_data("data/10.14.22/hydrogen/beta-superfine-1")
     print(get_max(data, 0))
-    """
+    
     x, y = data[:,0], data[:,1]
 
     ysize = y.size
@@ -137,13 +136,14 @@ if __name__ == "__main__":
     from scipy.fft import fft, ifft, fftfreq
     frequencies, amplitudes = fftfreq(ysize, step), fft(y)
 
-    cps = np.abs(amplitudes)
+    #cps = np.abs(amplitudes)
     #cps = data[:,1]
-    print (max(cps))
-    cutoff = get_cutoff(cps, 0)
-    print (get_regions(cps, cutoff, reduce = True))
-    plt.plot(frequencies, np.abs(amplitudes))
-    plt.plot(frequencies, np.where(np.abs(amplitudes) > cutoff, np.abs(amplitudes), -1))
+    #print (max(cps))
+    cutoff = get_cutoff(y)
+    print (get_regions(y, cutoff, reduce = True))
+    plt.plot(x, y, label = "data")
+    plt.plot(x, np.where(np.abs(y) > cutoff, np.abs(y), -1), label = "cut data")
+    plt.legend()
 
     amplitudes_new = np.where(np.abs(amplitudes) > cutoff, amplitudes, 0)
     #plt.plot(data[:,0], data[:,1])
@@ -152,9 +152,9 @@ if __name__ == "__main__":
     #hist, binedges = get_cutoffs(data, 0)
     #bincenters = (binedges[1:] + binedges[:-1]) / 2
     #print (bincenters)
-    plt.plot(x, y)
-    plt.plot(x, ifft(amplitudes_new))
-    plt.show()
+    #plt.plot(x, y)
+    #plt.plot(x, ifft(amplitudes_new))
+    #plt.show()
     #print (hist)
     #print (bincenters)
     
@@ -163,4 +163,4 @@ if __name__ == "__main__":
 
     #plt.plot()
     #plt.show()
-    """
+    

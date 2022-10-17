@@ -91,7 +91,7 @@ def voigt_with_shift_extract(result):
 
     return ((result.params['amp'].value, result.params['mu'].value, result.params['alpha'].value, result.params['gamma'].value, result.params['a'].value), (result.params['amp'].stderr, result.params['mu'].stderr, result.params['alpha'].stderr, result.params['gamma'].stderr, result.params['a'].stderr))
 
-two_voigt = lambda x, amp1, mu1, alpha1, gamma1, amp2, mu2, alpha2, gamma2, a : voigt(x, amp1, mu1, alpha1, gamma1) + voigt(x, amp2, mu2, alpha2, gamma2) + a
+two_voigt = lambda x, amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a : voigt(x, amp, mu, alpha, gamma) + voigt(x, amp2, mu2, alpha2, gamma2) + a
 
 def two_voigt_extract(result):
 
@@ -167,10 +167,10 @@ def two_voigt_params(data, expected_shift, stepsize = 0.0025):
         start_mu2 = data[:,0][arg_max - int(expected_shift // stepsize)]
     start_amp2 *= start_amp2 / max(voigt(data[:,0], start_amp2, start_mu2, start_alpha, start_gamma))
 
-    params.add('amp1', value = start_amp, min = 0)
-    params.add('mu1', value = start_mu)
-    params.add('alpha1', value = start_alpha, min = 1e-6)
-    params.add('gamma1', value = start_gamma, min = 0)
+    params.add('amp', value = start_amp, min = 0)
+    params.add('mu', value = start_mu)
+    params.add('alpha', value = start_alpha, min = 1e-6)
+    params.add('gamma', value = start_gamma, min = 0)
     params.add('amp2', value = start_amp2, min = 0)
     params.add('mu2', value = start_mu2, min = 1e-6)
     params.add('alpha2', value = start_alpha, min = 0)
