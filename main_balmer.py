@@ -3,7 +3,7 @@ from data import data_loader
 import lmfit
 from fitters import fit
 import matplotlib.pyplot as plt
-import models
+import models_2 as models
 import noise_reduction
 import math
 
@@ -74,11 +74,11 @@ for key in information:
     y_axis = data[:, 1]
 
     #model = lmfit.models.VoigtModel()
-    model = models.voigt_with_shift()
+    model = lmfit.Model(models.voigt_with_shift)
     #model = models.two_voigts() #not working
 
     #params = models.voigt_params(model, data)
-    params = models.shifted_voigt_params(model, data)
+    params = models.voigt_shift_params(data)
     #params = models.two_voigt_params(model, data) #not working
 
     result = fit(model, data, params, weights)
@@ -99,12 +99,13 @@ for key in information:
 
     # Maximum Counts Method
     
+
     # Calibration to convert the wavelengths
 
 
     # Bohr Formula to find Rydhberg Const.
-    wavelength["wavelength"] = wavelength["result"].best_values['center']
-    wavelength["wavelength_unc"] = wavelength["result"].params['center'].stderr
+    wavelength["wavelength"] = wavelength["result"].best_values['mu']
+    wavelength["wavelength_unc"] = wavelength["result"].params['mu'].stderr
     wavelength["R_H"] = 1/(((wavelength["wavelength"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
     wavelength["R_H  unc"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc"])
 

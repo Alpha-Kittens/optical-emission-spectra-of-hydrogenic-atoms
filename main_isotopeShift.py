@@ -3,7 +3,7 @@ from data import data_loader
 import lmfit
 from fitters import fit
 import matplotlib.pyplot as plt
-import models
+import models_2 as models
 import noise_reduction
 import math
 
@@ -85,11 +85,11 @@ for key in information:
         y_axis = data[:, 1]
 
         #model = lmfit.models.VoigtModel()
-        model = models.voigt_with_shift()
+        model = lmfit.Model(models.voigt_with_shift)
         #model = models.two_voigts() #not working
 
         #params = models.voigt_params(model, data)
-        params = models.shifted_voigt_params(model, data)
+        params = models.voigt_shift_params(data)
         #params = models.two_voigt_params(model, data) #not working
 
         result = fit(model, data, params, weights)
@@ -113,10 +113,10 @@ for key in information:
     # Calibration to convert the wavelengths
 
     # Isotope shifts (deuterium wavelength - hydrogen wavelength)
-    wavelength["shift"] = abs(wavelength["1_result"].best_values['center'] - wavelength["2_result"].best_values['center'])
+    wavelength["shift"] = abs(wavelength["1_result"].best_values['mu'] - wavelength["2_result"].best_values['mu'])
 
     # Uncertainty in Shift
-    wavelength["shift_unc"] = math.sqrt((wavelength["1_result"].params['center'].stderr)**2 + (wavelength["1_result"].params['center'].stderr)**2)
+    wavelength["shift_unc"] = math.sqrt((wavelength["1_result"].params['mu'].stderr)**2 + (wavelength["1_result"].params['mu'].stderr)**2)
 
     # Balmer Formula to find ratio of deuterium to proton mass
     wavelength["ratio"] = 1/(1 - R_inf*(m_p/m_e)*wavelength["shift"]*(10**(-10))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
