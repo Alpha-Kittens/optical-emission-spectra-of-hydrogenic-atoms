@@ -10,6 +10,10 @@ import numpy as np
 # File Path to main peak data files
 folder = "data/10.14.22/mercury/"
 
+
+# Small lines
+small_lines = [4358.328, 6149.475, 3131.55, 3131.84, 5677.105, 4347.494]
+
 # Define Main Peak Expected Lines
 wavelengths = {
     # https://physics.nist.gov/PhysRefData/Handbook/Tables/mercurytable2.htm
@@ -17,6 +21,7 @@ wavelengths = {
     'reference': [5790.663, 5769.598, 5460.735, 4046.563, 3650.153],
     'check': [6562, 4861, 4340.47, 4101.74], #hydrogen
 }
+
 
 
 # errors not provided for these measurements. 
@@ -70,7 +75,7 @@ measured_check = []
 error_check = []
 
 
-plot = False
+plot = True
 
 # Voigt Model & Fit
 for key in data:
