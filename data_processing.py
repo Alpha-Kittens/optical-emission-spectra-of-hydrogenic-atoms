@@ -146,3 +146,4 @@ def get_cutoff(cps):
 
 
 
+get_cutoff([1,2,3,4,5,6,7])

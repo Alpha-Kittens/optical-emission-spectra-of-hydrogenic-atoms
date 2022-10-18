@@ -1,6 +1,7 @@
 # Imports
 from data import data_loader
 import lmfit
+from data_processing import get_cutoff
 from fitters import fit
 import matplotlib.pyplot as plt
 import models_2 as models
@@ -173,3 +174,6 @@ results = {
 }
 
 print(results)
+
+
+get_cutoff([1,2,3,4,5,6,7])
