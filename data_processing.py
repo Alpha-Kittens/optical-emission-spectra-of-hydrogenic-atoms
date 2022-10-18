@@ -1,43 +1,58 @@
-import numpy as np
+from noise_reduction import reduce_noise
 from data.data_loader import read_data
 import matplotlib.pyplot as plt
-from data_processing import regions
+import numpy as np
 
 
-
-def get_max(data, standard_deviations = 2):
+def process_data(data, damping_constant = None, plot_noise_reduction = False):
     """
-    Given a list of spectrometer data, returns the max value of the peak and an 1-sigma uncertainty value based on the width of the peak. 
+    processes data after being intially read from the data file
+        1. reduces noise in data and obtains weights
+        2. identifies relevant regions in the data
+        3. selects the region with the correct peak
+        4. slices the data to give only the region we are interested in fitting
 
-    Arguments:
-        * `data` (nx2 numpy array): 2 columns. First is wavelength in angstroms, second is measured counts per second. 
-        * `standard_deviations` (float): Estimation of number of standard deviations of the mean will be classified as signal. 
-            - For wider peaks, this is probably around 2.
-            - For narrower peaks, this is probably around 3. 
+    Arguments: 
+        * `data` (nx2 numpy array): numpy array (matrix) with 2 columns:
+            - First column is x-axis (input to Model)
+            - Second column is y-axis (output of Model)
 
     Returns: 
-        * As a 2-tuple: 
-            - `maxes`: Array of wavelengths (in Angstroms) of max values
-            - `widths`: Array of 1-sigma uncertainty values associated with width of each peak. 
+        * `new_data` (nx2 numpy array): numpy array (matrix) with 2 columns, a slice of the original data
+            - First column is x-axis (input to Model)
+            - Second column is y-axis (output of Model)
+        * 'new_weights' weights for the slice of data of interest
     """
+
+    # Reducing Noise
+    if damping_constant is None and plot_noise_reduction == False:
+        new_data, weights = reduce_noise(data)
+    elif damping_constant is None:
+        new_data, weights = reduce_noise(data, plot=True)
+    elif plot_noise_reduction == False:
+        new_data, weights = reduce_noise(data)
+    else:
+        new_data, weights = reduce_noise(data, plot = True)
+
+
+    backgrounds, signals = regions(data[:,1])
+
+    maxval = 0
+    max_signal = (0,1)
+    for signal in signals:
+        smax = max(data[:,1][signal[0]:signal[1]+1])
+        if smax > maxval:
+            maxval = smax
+            max_signal = signal
     
-    
-    background, signals = regions(data[:,1])
-    print(len(signals))
-    print (signals)
+    i = np.array(range(len(data[:,1])))
 
-    standard_deviations = 2 # For more narrow peaks, may want to change this to 3? 
+    #return np.logical_and(i >= max_signal[0], i <= max_signal[1]) old return statement
+    new_data = data[max_signal[0]:max_signal[1],:]
+    new_weights = weights[max_signal[0]:max_signal[1]]
+    return new_data, new_weights
 
-    maxes = [max(data[signal[0]:signal[1]+1, 1]) for signal in signals]
-    widths = [(signal[1] - signal[0])/2/standard_deviations for signal in signals]
 
-    return maxes, widths
-    
-
-#THESE THINGS ARE NOW IN data_processing
-#this is called elsewhere so might break stuff
-#please check where it breaks and change it to call these methods from data_processing instead of max_model :)
-'''
 def regions(cps, reduce = True):
     """
     Given an array of positive values, determines a cutoff to distinguish signal from noise, then determines regions of indices
@@ -60,6 +75,7 @@ def regions(cps, reduce = True):
 
 
 
+
 def get_regions(cps, cutoff, reduce = False):
     """
     Given an array of positive values and a cutoff, determines signal and background regions of the data. 
@@ -72,7 +88,7 @@ def get_regions(cps, cutoff, reduce = False):
             Generally should be set to True for wide signals.  
 
     Returns:
-        * As a 2-array
+        * As a 2-array 
             - `backgrounds` (Array of tuples): Ranges of indices of `cps` classified as background
             - `signals` (Array of tuples):  Ranges of indices of `cps` classified as signal
     """
@@ -125,6 +141,18 @@ def get_cutoff(cps):
     print ("The cutoff is ", binedges[cutoff], ". ", np.sum(hist[cutoff:]), "/", np.sum(hist), " of the data is above the cutoff.")
 
     return binedges[cutoff]
-'''
 
 
+
+
+
+#Test
+folder = 'data/10.14.22/hydrogen'
+alpha_H_fp  = folder + '/alpha-superfine-1'
+data = read_data(alpha_H_fp)
+
+
+plt.scatter(data[:,0],data[:,1])
+new_data, weights = process_data(data)
+plt.scatter(new_data[:,0], new_data[:,1])
+plt.show()

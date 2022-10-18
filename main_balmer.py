@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import models_2 as models
 import noise_reduction
 import math
+from calibration import calibration
+from calibration import calibration_error
 
 # File Path to peak data files
 folder = 'data/10.14.22/hydrogen'
@@ -21,6 +23,8 @@ delta_H_fp = folder + '/delta-superfine-1'
 #Constants
 m_p = 1.67262192E-27 #kilograms
 m_e = 9.1093837E-31 #kilograms
+c = 2.998E8 #m/s^2
+k_B = 1.38E-23 #boltzmann constant
 nf = 2
 R_inf = 10973731.568160 #m^-1
 
@@ -101,14 +105,33 @@ for key in information:
     
 
     # Calibration to convert the wavelengths
-
-
+    true_wavelength = calibration(wavelength["result"].best_values['mu'])
+    print(true_wavelength)
+    true_uncertainty = calibration_error(wavelength["result"].best_values['mu'],wavelength["result"].params['mu'].stderr)
+    print('old uncertainty: ' + str(wavelength["result"].params['mu'].stderr))
+    print('true uncertainty: ' + str(true_uncertainty))
     # Bohr Formula to find Rydhberg Const.
-    wavelength["wavelength"] = wavelength["result"].best_values['mu']
-    wavelength["wavelength_unc"] = wavelength["result"].params['mu'].stderr
+    wavelength["wavelength"] = true_wavelength
+    wavelength["wavelength_unc"] = true_uncertainty
     wavelength["R_H"] = 1/(((wavelength["wavelength"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
     wavelength["R_H  unc"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc"])
 
+    ## FIX THIS LATER!!!! !!!
+    # Determining the Temperature
+    alpha = wavelength["result"].best_values['alpha']
+
+    constant_term = ((m_p)*(c**2)/(k_B))
+    ratio_term = alpha/(2*true_wavelength)
+    print("constant term: " + str(constant_term))
+
+    #wavelength["temperature"] = ((m_p*(c**2))/k_B)*(1/(8*math.log(2)))*(alpha/(2*true_wavelength))**2
+    #print('temperature: ' + str(wavelength["temperature"]))
+    print('ratio: ' + str(ratio_term) )
+
+    wavelength["temperature"] = constant_term*(ratio_term**2)
+    print('temperature: ' + str(wavelength["temperature"]))
+
+    ##FIX THIS LATER ^^
 
 # Average and Standard Dev.
 # Mean

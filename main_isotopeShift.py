@@ -15,7 +15,8 @@ alpha_H_fp  = folder + '/alpha4H'
 beta_L_fp = folder + '/beta1L'
 beta_H_fp = folder + '/beta2H'
 
-gamma_L_fp = folder + '/gamma2L'
+#gamma_L_fp = folder + '/gamma2L'
+gamma_L_fp = folder + '/gamma3HL'
 gamma_H_fp = folder + '/gamma1H'
 
 delta_L_fp = folder + '/delta1L'
