@@ -117,22 +117,18 @@ for key in information:
     wavelength["R_H"] = 1/(((wavelength["wavelength"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
     wavelength["R_H  unc"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc"])
 
-    ## FIX THIS LATER!!!! !!!
+
     # Determining the Temperature
     alpha = wavelength["result"].best_values['alpha']
 
     constant_term = ((m_p)*(c**2)/(k_B))
-    ratio_term = alpha/(2*true_wavelength)
-    print("constant term: " + str(constant_term))
+    ratio_term = alpha/(true_wavelength)
 
-    #wavelength["temperature"] = ((m_p*(c**2))/k_B)*(1/(8*math.log(2)))*(alpha/(2*true_wavelength))**2
-    #print('temperature: ' + str(wavelength["temperature"]))
-    print('ratio: ' + str(ratio_term) )
-
-    wavelength["temperature"] = constant_term*(ratio_term**2)
+    wavelength["temperature"] = constant_term*(ratio_term**2)/(2*math.log(2))
     print('temperature: ' + str(wavelength["temperature"]))
 
-    ##FIX THIS LATER ^^
+
+
 
 # Average and Standard Dev.
 # Mean
