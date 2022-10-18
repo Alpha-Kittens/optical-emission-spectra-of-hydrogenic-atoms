@@ -101,6 +101,7 @@ def fit_to_voigt(data, shift = 0, plot = False):
 
 #
 # IMPLEMENTED IN DATA PROCESSING NOW
+# Can be deleted now
 #
 def primary_signal_region (data):
 

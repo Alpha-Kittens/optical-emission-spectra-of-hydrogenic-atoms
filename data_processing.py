@@ -1,3 +1,4 @@
+# Imports
 from noise_reduction import reduce_noise
 from data.data_loader import read_data
 import matplotlib.pyplot as plt
@@ -145,14 +146,3 @@ def get_cutoff(cps):
 
 
 
-
-#Test
-folder = 'data/10.14.22/hydrogen'
-alpha_H_fp  = folder + '/alpha-superfine-1'
-data = read_data(alpha_H_fp)
-
-
-plt.scatter(data[:,0],data[:,1])
-new_data, weights = process_data(data)
-plt.scatter(new_data[:,0], new_data[:,1])
-plt.show()

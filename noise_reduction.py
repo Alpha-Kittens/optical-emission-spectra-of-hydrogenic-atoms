@@ -2,7 +2,7 @@ import numpy as np
 from scipy.fft import fft, ifft, fftfreq
 import matplotlib.pyplot as plt 
 from data.data_loader import read_data
-from max_model import get_cutoff, get_regions
+from data_processing import get_cutoff, get_regions, regions
 
 def reduce_noise (data, damping_constant = 1/10, plot = False):
     """
@@ -109,7 +109,7 @@ def bandpass(frequencies, amplitudes):
 
     #consider: exponential damping of unused amplitudes. 
 
-    from max_model import get_cutoff
+   # from max_model import get_cutoff
 
     cutoff = get_cutoff(np.abs(amplitudes))
 
@@ -133,7 +133,7 @@ def bandpass_old(frequencies, amplitudes):
 
     #use max_model to find width?
 
-    from max_model import regions
+  #  from max_model import regions
 
     backgrounds, signals = regions(np.abs(amplitudes), 0, reduce = False)
 
