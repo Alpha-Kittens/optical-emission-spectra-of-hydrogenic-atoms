@@ -11,7 +11,6 @@ from max_model import regions
 from noise_reduction import reduce_noise
 from models import voigt_models
 
-
 def execute_peak_fit(data, shift = 0, plot = False):
 
     new_data, weights = reduce_noise(data)
