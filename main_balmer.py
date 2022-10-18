@@ -2,13 +2,14 @@
 from data import data_loader
 import lmfit
 from data_processing import get_cutoff
-from fitters import fit
+from fitters import fit, fit_to_voigt
 import matplotlib.pyplot as plt
 import models_2 as models
 import noise_reduction
 import math
 from calibration import calibration
 from calibration import calibration_error
+from data_processing import process_data
 
 # File Path to peak data files
 folder = 'data/10.14.22/hydrogen'
@@ -69,7 +70,37 @@ for key in information:
 
     # Read data
     data = data_loader.read_data(wavelength["fp"])
-    
+
+    result_params  = fit_to_voigt(data, plot=True)
+
+    wavelength["params"] = result_params
+
+    # Calibration to convert the wavelengths
+    true_wavelength = calibration(wavelength["params"]['mu'].value)
+    print(true_wavelength)
+    true_uncertainty = calibration_error(wavelength["params"]['mu'].value,wavelength["params"]['mu'].stderr)
+    print('old uncertainty: ' + str(wavelength["params"]['mu'].stderr))
+    print('true uncertainty: ' + str(true_uncertainty))
+    # Bohr Formula to find Rydhberg Const.
+    wavelength["wavelength"] = true_wavelength
+    wavelength["wavelength_unc"] = true_uncertainty
+    wavelength["R_H"] = 1/(((wavelength["wavelength"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
+    wavelength["R_H  unc"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc"])
+
+
+    # Determining the Temperature
+    alpha = calibration(wavelength["params"]['alpha'].value + wavelength["params"]['mu'].value) - true_wavelength
+
+    constant_term = ((m_p)*(c**2)/(k_B))
+    ratio_term = alpha/(true_wavelength)
+
+    wavelength["temperature"] = constant_term*(ratio_term**2)/(2*math.log(2))
+    print('temperature: ' + str(wavelength["temperature"]))
+
+
+
+    '''
+    OLD CODE
     # Noise reduction and find Uncertainties
     new_data, weights = noise_reduction.reduce_noise(data, damping_constants[key]) # damping constant default is 1/10
 
@@ -98,35 +129,7 @@ for key in information:
     plt.plot(x_axis, new_data[:,1], '-', color = 'r', label = 'noise-reduced')
     plt.legend()
     plt.show()
-
-
-    wavelength["result"] = result
-
-    # Maximum Counts Method
-    
-
-    # Calibration to convert the wavelengths
-    true_wavelength = calibration(wavelength["result"].best_values['mu'])
-    print(true_wavelength)
-    true_uncertainty = calibration_error(wavelength["result"].best_values['mu'],wavelength["result"].params['mu'].stderr)
-    print('old uncertainty: ' + str(wavelength["result"].params['mu'].stderr))
-    print('true uncertainty: ' + str(true_uncertainty))
-    # Bohr Formula to find Rydhberg Const.
-    wavelength["wavelength"] = true_wavelength
-    wavelength["wavelength_unc"] = true_uncertainty
-    wavelength["R_H"] = 1/(((wavelength["wavelength"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
-    wavelength["R_H  unc"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc"])
-
-
-    # Determining the Temperature
-    alpha = wavelength["result"].best_values['alpha']
-
-    constant_term = ((m_p)*(c**2)/(k_B))
-    ratio_term = alpha/(true_wavelength)
-
-    wavelength["temperature"] = constant_term*(ratio_term**2)/(2*math.log(2))
-    print('temperature: ' + str(wavelength["temperature"]))
-
+    '''
 
 
 
@@ -160,16 +163,19 @@ for key in information:
 sys_unc = math.sqrt(sum)/math.sqrt(len(information))
 print(sys_unc)
 
-
+sum = 0
+for key in information:
+    wavelength = information[key]
+    sum += wavelength["temperature"]
+temperature = sum/len(information)
 
 results = {
     "mean" : mean,
     "standard deviation" : std_dev,
     "stat uncertainty" : stat_unc,
-    "sys uncertainty" : sys_unc
+    "sys uncertainty" : sys_unc,
+    "temperature" : temperature
 }
 
 print(results)
 
-
-get_cutoff([1,2,3,4,5,6,7])
