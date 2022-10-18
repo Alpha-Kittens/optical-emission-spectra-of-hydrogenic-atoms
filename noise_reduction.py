@@ -2,7 +2,7 @@ import numpy as np
 from scipy.fft import fft, ifft, fftfreq
 import matplotlib.pyplot as plt 
 from data.data_loader import read_data
-from data_processing import *
+from data_processing import get_cutoff,get_regions,regions
 
 def reduce_noise (data, damping_constant = 1/10, plot = False):
     """

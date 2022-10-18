@@ -1,5 +1,4 @@
 # Imports
-from noise_reduction import reduce_noise
 from data.data_loader import read_data
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,6 +23,8 @@ def process_data(data, damping_constant = None, plot_noise_reduction = False):
             - Second column is y-axis (output of Model)
         * 'new_weights' weights for the slice of data of interest
     """
+
+    from noise_reduction import reduce_noise
 
     # Reducing Noise
     if damping_constant is None and plot_noise_reduction == False:
@@ -144,6 +145,3 @@ def get_cutoff(cps):
     return binedges[cutoff]
 
 
-
-
-get_cutoff([1,2,3,4,5,6,7])
