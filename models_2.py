@@ -17,10 +17,6 @@ def linear(x, m, b):
     """
     return (m*x)+b
 
-def linear_extract(result):
-
-    pass
-
 def quadratic(x, a, b, c):
     """
     quadratic model y=ax^2 + bx + c
@@ -35,10 +31,6 @@ def quadratic(x, a, b, c):
         * `y` : result of y=ax^2 + bx + c
     """
     return (a*(x**2)) + (b*x) + c
-
-def quadratic_extract(result):
-
-    pass
 
 def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err):
     """
@@ -192,9 +184,9 @@ def two_voigt_params(data, expected_shift, stepsize = 0.0025):
     return params
 
 voigt_models = {
-    'voigt' : (voigt, voigt_params, voigt_extract),
-    'voigt_with_shift' : (voigt_with_shift, voigt_shift_params, voigt_with_shift_extract),
-    'two_voigt' : (two_voigt, two_voigt_params, two_voigt_extract),
+    'voigt' : (voigt, voigt_params),
+    'voigt_with_shift' : (voigt_with_shift, voigt_shift_params),
+    'two_voigt' : (two_voigt, two_voigt_params),
 }
 
 if __name__ == '__main__':

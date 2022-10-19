@@ -13,6 +13,7 @@ from noise_reduction import reduce_noise
 from models_2 import voigt_models
 from data_processing import process_data
 
+
 def execute_peak_fit(data, shift = 0, plot = False):
 
     new_data, weights = reduce_noise(data)
@@ -58,9 +59,9 @@ def execute_peak_fit(data, shift = 0, plot = False):
 # IMPLEMENTS IN DATA PROCESSING NOW
 # Also returns the entire result cuz its useful
 #
-def fit_to_voigt(data, shift = 0, plot = False):
+def fit_to_voigt(data, shift = 0, damping_constant = 1/10, plot = False):
 
-    processed_data, weights = process_data(data, plot_noise_reduction=False)
+    processed_data, weights = process_data(data, damping_constant = damping_constant, plot_noise_reduction=plot)
     
     if shift == 0:
         choice = 'voigt_with_shift'

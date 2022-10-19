@@ -6,6 +6,10 @@ from noise_reduction import reduce_noise
 import matplotlib.pyplot as plt
 import lmfit
 import numpy as np
+from fitters import fit_to_voigt
+
+#this might be buggy. I'm sorry, I totally ran out of energy
+
 
 # File Path to main peak data files
 folder = "data/10.14.22/mercury/"
@@ -71,38 +75,54 @@ superfine_stepsize = 0.0025
 
 # plot, user request splitting estimate
 
-measured_reference = []
-error_reference = []
-measured_check = []
-error_check = []
+measured = {
+    'reference': [],
+    'check' : [],
+}
+error = {
+    'reference': [],
+    'check' : [],
+}
 
 
-plot = True
+enter_splittings = True
+
+splittings = {
+    'reference': [None, None, None, None, None],
+    'check': [],
+}
+damping_constants = {
+    'reference': [None, None, None, None, None],
+    'check': [],
+}
 
 # Voigt Model & Fit
+
 for key in data:
-    for entry in data[key]:
-
+    for i in range(len(data[key])):
+        entry = data[key][i]
         new_data, weights = reduce_noise(entry)
-
-        if plot:
+        if enter_splittings or splittings[key][i] is None:
             plt.scatter(entry[:,0], entry[:,1], marker = '.', label = "data", color = 'b')
             plt.plot(entry[:,0], new_data[:,1], label = "noise-reduced", color = 'r')
             plt.legend()
             plt.show()
 
-        shift = float(input("Estimate the splitting in that plot (Angstroms): "))
+            shift = float(input("Estimate the splitting in that plot (Angstroms): "))
+            damping_constant = float(input("Give a damping constant (if adequate, enter 1/10)"))
 
-        mu, mu_err = execute_peak_fit(entry, shift, plot = True)
-        
-        wavelength = mu
-        error = mu_err
-        if key == 'reference':
-            measured_reference.append(wavelength)
-            error_reference.append(error)
-        if key == 'check':
-            measured_check.append(wavelength)
-            error_check.append(error)
+            splittings[key][i] = shift
+            damping_constants[key][i] = damping_constant
+
+        result = fit_to_voigt(data, shift = splittings[key][i], damping_constant = damping_constants[key][i], plot = enter_splittings)
+
+        mu, mu_err = result.params["mu"].value, result.params["mu"].stderr
+
+        measured[key].append(mu)
+        error[key].append(mu_err)
+
+print (splittings)
+print (damping_constants)
 
 # Maximum Counts
 #??
@@ -112,14 +132,14 @@ for key in data:
 
 # Quadratic Model and Fit
 
-plt.errorbar(measured_reference, wavelengths['reference'], yerr = error_reference, label = "calibration data", color = 'b', fmt = '.')
+plt.errorbar(measured['reference'], wavelengths['reference'], yerr = error['reference'], label = "calibration data", color = 'b', fmt = '.')
 plt.xlabel("measured wavelength")
 plt.ylabel("actual wavelength")
 plt.legend()
 plt.show()
 
-quad = False
-sin = True
+quad = True
+sin = False
 
 if quad:
     calibration_model = lmfit.Model(quadratic)
@@ -139,11 +159,11 @@ if sin:
     params.add('phi', value = 0, min = -np.pi, max = np.pi)
 
 
-inputs = np.zeros((len(measured_reference), 2))
-inputs[:,0] = measured_reference
+inputs = np.zeros((len(measured['reference']), 2))
+inputs[:,0] = measured['reference']
 inputs[:,1] = wavelengths['reference']
 
-result = fit(calibration_model, inputs, params, weights = error_reference) # a slight approximation of the true weights but whatever (the slope is roughly 1).
+result = fit(calibration_model, inputs, params, weights = error['reference']) # a slight approximation of the true weights but whatever (the slope is roughly 1).
 
 calibration_file = "calibration.py"
 
@@ -178,11 +198,11 @@ if sin:
 chisqr = result.chisqr
 redchi = result.redchi
 
-plt.errorbar(measured_reference, wavelengths['reference'], error_reference, label = "calibration data", color = 'b', fmt = '.')
-x = np.linspace(min(measured_reference) - 100, max(measured_reference) + 100, 2010)
+plt.errorbar(measured['reference'], wavelengths['reference'], error['reference'], label = "calibration data", color = 'b', fmt = '.')
+x = np.linspace(min(measured['reference']) - 100, max(measured['reference']) + 100, 2010)
 plt.plot(x, calibration(x), label = "calibration curve", color = 'r')
-plt.text(5000, 4000, "Chi square: " + str(chisqr))
-plt.text(5000, 3800, "Reduced: " + str(redchi))
+plt.text(5000, 4000, "Chi square: " + str(chisqr)) # truncate decimal
+plt.text(5000, 3800, "Reduced: " + str(redchi)) # truncate decimal
 plt.xlabel("measured wavelength")
 plt.ylabel("actual wavelength")
 plt.legend()
@@ -190,8 +210,12 @@ plt.show()
 # File path to small peak data files
 # Read data
 # Voigt Model & Fit
-#completed earlier
+# completed earlier
+def chisquare(x, e):
+    return np.dot(x-e, (x-e)/e)
 
+#get chi square of performance on check data. 
+"""
 # Test quadratic model
 # better way of doing this with arrays probably exists
 plt.errorbar(measured_check, wavelengths['check'], error_check, label = "check data", color = 'b', fmt = '.')
@@ -203,3 +227,4 @@ plt.xlabel("measured wavelength")
 plt.ylabel("actual wavelength")
 plt.legend()
 plt.show()
+"""
