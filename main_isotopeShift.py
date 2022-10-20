@@ -15,9 +15,11 @@ alpha_H_fp  = folder + '/alpha4H'
 beta_L_fp = folder + '/beta1L'
 beta_H_fp = folder + '/beta2H'
 
-#gamma_L_fp = folder + '/gamma2L'
-gamma_L_fp = folder + '/gamma3HL'
+gamma_L_fp = folder + '/gamma2L'
+#gamma_L_fp = folder + '/gamma3HL' (this is supposed to be both peaks, but it doesn't look like it so idk)
 gamma_H_fp = folder + '/gamma1H'
+
+#delta = 'data/10.14.22/deuterium/delta-superfine-1'
 
 delta_L_fp = folder + '/delta1L'
 delta_H_fp = folder + '/delta2H'
