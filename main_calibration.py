@@ -103,6 +103,8 @@ for key in data:
     for i in range(len(data[key])):
         entry = data[key][i]
         
+
+        #Made some changes, if you think this is worse, you can revert though this might mean we should modify process_data to make it more appropriate -Athira
         processed_data,weights = process_data(entry, plot_noise_reduction=True)  #Added by Athira, plot set to true so can answer shift questions
         #new_data, weights = reduce_noise(entry)        --commented out by Athira, to implement process_data
         if enter_splittings or splittings[key][i] is None:
