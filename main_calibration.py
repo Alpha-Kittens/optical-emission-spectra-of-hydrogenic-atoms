@@ -1,5 +1,6 @@
 from re import M
 from data.data_loader import read_data
+from data_processing import process_data
 from fitters import fit, execute_peak_fit
 from models_2 import *
 from noise_reduction import reduce_noise
@@ -101,12 +102,16 @@ damping_constants = {
 for key in data:
     for i in range(len(data[key])):
         entry = data[key][i]
-        new_data, weights = reduce_noise(entry)
+        
+        processed_data,weights = process_data(entry, plot_noise_reduction=True)  #Added by Athira, plot set to true so can answer shift questions
+        #new_data, weights = reduce_noise(entry)        --commented out by Athira, to implement process_data
         if enter_splittings or splittings[key][i] is None:
+            '''
             plt.scatter(entry[:,0], entry[:,1], marker = '.', label = "data", color = 'b')
-            plt.plot(entry[:,0], new_data[:,1], label = "noise-reduced", color = 'r')
+            plt.plot(entry[:,0], processed_data[:,1], label = "noise-reduced", color = 'r')
             plt.legend()
             plt.show()
+            '''
 
             shift = float(input("Estimate the splitting in that plot (Angstroms): "))
             damping_constant = float(input("Give a damping constant (if adequate, enter 1/10)"))
@@ -114,7 +119,7 @@ for key in data:
             splittings[key][i] = shift
             damping_constants[key][i] = damping_constant
 
-        result = fit_to_voigt(data, shift = splittings[key][i], damping_constant = damping_constants[key][i], plot = enter_splittings)
+        result = fit_to_voigt(processed_data, weights, shift = splittings[key][i], damping_constant = damping_constants[key][i], plot = enter_splittings)
 
         mu, mu_err = result.params["mu"].value, result.params["mu"].stderr
 

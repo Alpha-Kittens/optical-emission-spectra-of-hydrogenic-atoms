@@ -59,9 +59,7 @@ def execute_peak_fit(data, shift = 0, plot = False):
 # IMPLEMENTS IN DATA PROCESSING NOW
 # Also returns the entire result cuz its useful
 #
-def fit_to_voigt(data, shift = 0, damping_constant = 1/10, plot = False):
-
-    processed_data, weights = process_data(data, damping_constant = damping_constant, plot_noise_reduction=plot)
+def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, plot = False):
     
     if shift == 0:
         choice = 'voigt_with_shift'

@@ -71,7 +71,9 @@ for key in information:
     # Read data
     data = data_loader.read_data(wavelength["fp"])
 
-    result_params  = fit_to_voigt(data, plot=True)
+    processed_data,weights = process_data(data, plot_noise_reduction=True)
+
+    result_params  = fit_to_voigt(processed_data, weights, plot=True)
 
     wavelength["params"] = result_params
 
