@@ -79,10 +79,15 @@ for key in information:
 
     wavelength["shift_error"] = calibration_error(result_params["mu"].value, result_params["mu"].stderr)
 
+    print("Shift error" + str(wavelength["shift_error"]))
+    print("Shift " + str(wavelength["shift"]))
+
+
     # Balmer Formula to find ratio of deuterium to proton mass
     wavelength["ratio"] = 1/(1 - R_inf*(m_p/m_e)*wavelength["shift"]*(10**(-10))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
 
     wavelength["ratio_error"] = ((wavelength["ratio"])**2)*R_inf*(m_p/m_e)*((1/(nf**2)) - (1/(wavelength["ni"]**2))) * wavelength["shift_error"]*(10**(-10))
+
 
 # Mean (Weighted Average)
 numerator = 0
@@ -91,9 +96,14 @@ for key in information:
     wavelength = information[key]
     numerator += wavelength["ratio"] / ((wavelength["ratio_error"])**2)
     denominator += 1/((wavelength["ratio_error"])**2)
+    print(wavelength["ratio_error"])
+    print(denominator)
 
 mean = numerator/denominator
 print(mean)
+
+stat_unc = (1/math.sqrt(denominator))
+
 
 # Uncertainty (currently this is wrong, pls ignore)
 sum = 0
@@ -101,15 +111,16 @@ for key in information:
     wavelength = information[key]
     sum += (wavelength["ratio"] - mean)**2
 
-std_dev = math.sqrt(sum/(len(information) - 1))
+std_dev = math.sqrt(sum/(len(information)))
 
-stat_unc = std_dev/math.sqrt(len(information))
+stat_unc_wrong = std_dev/math.sqrt(len(information))
 
 
 results = {
     "mean" : mean,
     "standard deviation" : std_dev,
     "stat uncertainty" : stat_unc,
+    "stat_unc_wrong": stat_unc_wrong
 }
 
 print(results)
