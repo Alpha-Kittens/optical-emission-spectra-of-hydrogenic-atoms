@@ -1,5 +1,8 @@
 from calibration import *
 import numpy as np
+from data import data_loader
+from data_processing import process_data
+from fitters import fit_to_voigt
 
 """
 Expected peaks:
@@ -31,18 +34,65 @@ Measured range of interest:
 """
 
 # File Path to peak data files
+folder = 'data/final_data/sodium/'
+
+a = {
+    'transition' : ""
+}
+b = {
+    'transition' : ""
+}
+c = {
+    'transition' : ""
+}
+d = {
+    'transition' : ""
+}
+e = {
+    'transition' : ""
+}
+f = {
+    'transition' : ""
+}
+g = {
+    'transition' : ""
+}
+h = {
+    'transition' : ""
+}
+
+#Collect all the splittings
+information = {
+    'a' : a,
+    'b' : b,
+    "c" : c,
+    "d" : d,
+    "e" : e,
+    "f" : f,
+    "g" : g,
+    "h" : h
+}
+
+for key in information:
+
+    wavelength = information[key]
+    wavelength["fp_1"] = folder + key + "L"
+    wavelength["fp_2"] = folder + key + "H"
+
+    for i in range(1, 3):
+        # Read data
+        data = data_loader.read_data(wavelength["fp_" + str(i)])
+
+        #Process data
+        processed_data, weights = process_data(data, plot_noise_reduction=True)
 
 
-# Read data
+        #Fitting
+        result_params  = fit_to_voigt(processed_data, weights, plot=True)
+
+        wavelength["wavelength_" + str(i)] = result_params['mu'].value
+        wavelength["wavelength_error_" + str(i)] = result_params['mu'].stderr
 
 
-# Noise reduction and find Uncertainties
-
-
-# Voigt Model & Fit
-
-
-# Maximum Counts
-
-
-# Categorize peaks by energy level
+for key in information:
+    print(information[key])
