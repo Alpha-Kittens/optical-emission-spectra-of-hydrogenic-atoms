@@ -37,25 +37,25 @@ Measured range of interest:
 folder = 'data/final_data/sodium/'
 
 a = {
-    'transition' : ""
+    'transition' : "7s --> 4p",
 }
 b = {
-    'transition' : ""
+    'transition' : "4p --> 3s"
 }
 c = {
-    'transition' : ""
+    'transition' : "5d --> 4p"
 }
 d = {
-    'transition' : ""
+    'transition' : "6s --> 4p"
 }
 e = {
-    'transition' : ""
+    'transition' : "6d --> 4p"
 }
 f = {
-    'transition' : ""
+    'transition' : "7s --> 4p"
 }
 g = {
-    'transition' : ""
+    'transition' : "7d --> 4p"
 }
 h = {
     'transition' : ""
