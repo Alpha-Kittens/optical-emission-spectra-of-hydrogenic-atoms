@@ -3,6 +3,7 @@ from scipy.fft import fft, ifft, fftfreq
 import matplotlib.pyplot as plt 
 from data.data_loader import read_data
 from data_processing import get_cutoff,get_regions,regions
+from fitters import primary_signal_region
 
 def reduce_noise (data, damping_constant = 1/10, plot = False):
     """
@@ -37,7 +38,10 @@ def reduce_noise (data, damping_constant = 1/10, plot = False):
     errors = np.array([np.sqrt(np.sum(removed[max(i - neighborhood, 0):min(i + neighborhood + 1, len(removed))] ** 2) / (min(i + neighborhood + 1, len(removed)) - max(i - neighborhood, 0))) for i in range(len(removed))])
 
     if plot:
-        plt.plot(x, y)
+        psr = primary_signal_region(data)
+        #plt.scatter(x[psr], y[psr], marker = '.')
+        #plt.plot(x[psr], new_data[psr])
+        plt.scatter(x, y, marker = '.')
         plt.plot(x, new_data)
         plt.show()
 

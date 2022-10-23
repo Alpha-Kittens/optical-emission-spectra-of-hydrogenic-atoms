@@ -1,5 +1,10 @@
 import numpy as np
 
+f = 'final_data/'
+
+mercury = {
+    'fp' : f + "mercury/",
+}
 def read_data(file_path):
     """
     Reads scanning data from given file.

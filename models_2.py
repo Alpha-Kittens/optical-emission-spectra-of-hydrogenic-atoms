@@ -2,6 +2,7 @@ import numpy as np
 import lmfit
 from scipy.special import wofz
 from max_model import regions
+import matplotlib.pyplot as plt
 
 def linear(x, m, b):
     """
@@ -66,6 +67,27 @@ def linear_plus_osc(x, a, b, n, omega, phi):
 
     return a*x + b + n*np.sin(omega * x - phi)
 
+def linear_plus_osc_err(x, x_err, a, a_err, b, b_err, n, n_err, omega, omega_err, phi, phi_err):
+    pass
+
+def cubic(x, a, b, c, d):
+    return a * x**3 + b * x**2 + c * x + d
+
+def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err, d, d_err):
+    
+    x_rel = x_err / x
+    a_rel = a_err / a
+    b_rel = b_err / b
+    c_rel = c_err / c
+    d_rel = d_err / d
+
+    print ("a contribution: "+str(((a * x**3)**2 * (a_rel**2 + 3 * x_rel**2))**(1/2)))
+    print ("b contribution: "+str(((b * x**2)**2 * (b_rel ** 2 + 2 * x_rel**2))**(1/2)))
+    print ("c contribution: "+str(((c * x)**2 * (c_rel ** 2 + x_rel**2))**(1/2)))
+    print ("d contribution: "+str(d_err**2))
+
+    return (((a * x**3)**2 * (a_rel**2 + 3 * x_rel**2))**(1/2) + ((b * x**2)**2 * (b_rel ** 2 + 2 * x_rel**2))**(1/2) + ((c * x)**2 * (c_rel ** 2 + x_rel**2))**(1/2) + d_err**2) ** (1/2)
+
 def voigt(x, amp, mu, alpha, gamma):
     """
     Voigt, i.e. gaussian convolved with lorentzian
@@ -109,26 +131,32 @@ def get_voigt_params(data, return_max = False):
 
     maxes = [max(cps[signal[0]:signal[1]+1]) for signal in signals]
 
-    max_signal = signals[np.argmax(maxes)]
+    if maxes == []:
+        start_alpha = (max(data[:,0]) - min(data[:,0])) / 4
+        start_gamma = start_alpha
+    else:
+        max_signal = signals[np.argmax(maxes)]
+        start_alpha = (wavelengths[max_signal[1]] - wavelengths[max_signal[0]]) / 4
+        start_gamma = start_alpha
     arg_max = np.argmax(cps)
-    start_mu, start_amp = wavelengths[arg_max], cps[arg_max]
-    print (start_mu)
-    print (start_amp)
-    start_alpha = (wavelengths[max_signal[1]] - wavelengths[max_signal[0]]) / 4
-    start_gamma = start_alpha / 4
-    print (start_alpha)
-    print (start_gamma)
-    start_amp *= start_amp / max(voigt(data[:,0], start_amp, start_mu, start_alpha, start_gamma))
+    start_mu = wavelengths[arg_max]
+    #print (cps[arg_max])
+    start_amp =  cps[arg_max] / voigt(data[arg_max,0], 1, start_mu, start_alpha, start_gamma) - min(cps)
+    #print (start_mu)
+    #print (start_amp)
+    #print (start_alpha)
+    #print (start_gamma)
+    #print (voigt(data[arg_max,0], start_amp, start_mu, start_alpha, start_gamma))
 
     if return_max:
         return start_amp, start_mu, start_alpha, start_gamma, arg_max
     return start_amp, start_mu, start_alpha, start_gamma
 
-def voigt_params(data, return_max = False):
+def voigt_params(data):
 
     params = lmfit.Parameters()
 
-    start_amp, start_mu, start_alpha, start_gamma = get_voigt_params(data, return_max = return_max)
+    start_amp, start_mu, start_alpha, start_gamma = get_voigt_params(data)
 
     import matplotlib.pyplot as plt
 
@@ -151,25 +179,53 @@ def voigt_shift_params(data):
 
     return params
 
-def two_voigt_params(data, expected_shift, stepsize = 0.0025):
+def two_voigt_params(data, expected_shift, plot = True, stepsize = 0.0025):
+    # if plot is True, shows initial guess
 
     params = lmfit.Parameters()
 
-    start_amp, start_mu, start_alpha, start_gamma, arg_max = get_voigt_params(data, return_max = True)
+    #start_amp, start_mu, start_alpha, start_gamma, arg_max = get_voigt_params(data, return_max = True)
+    start_amp, start_mu, start_alpha, start_gamma = get_voigt_params(data)
+    start_alpha = min(start_alpha, expected_shift / 4)
+    start_gamma = min(start_alpha, expected_shift / 4)
+    start_amp = (max(data[:,1]) -  - min(data[:,1])) / max(voigt(data[:,0], 1, start_mu, start_alpha, start_gamma))
+    #print (start_gamma)
+    #start_amp *= np.sqrt(start_amp / max(voigt(data[:,0], start_amp, start_mu, start_alpha, start_gamma))) #sqrt just seems to kind of work, I guess
 
+    """
     if arg_max + int(expected_shift // stepsize) > len(data[:,1]):
-        start_amp2 = data[:,1][max(arg_max - int(expected_shift // stepsize), 0)]
-        start_mu2 = data[:,0][max(arg_max - int(expected_shift // stepsize), 0)]
+        index = max(arg_max - int(expected_shift // stepsize), 0)
     elif arg_max - int(expected_shift // stepsize) < 0:
-        start_amp2 = data[:,1][arg_max + int(expected_shift // stepsize)]
-        start_mu2 = data[:,0][arg_max + int(expected_shift // stepsize)]        
+        index = arg_max + int(expected_shift // stepsize)  
     elif data[:,1][arg_max + int(expected_shift // stepsize)] > data[:,1][arg_max - int(expected_shift // stepsize)]:
-        start_amp2 = data[:,1][arg_max + int(expected_shift // stepsize)]
-        start_mu2 = data[:,0][arg_max + int(expected_shift // stepsize)]
+        index = arg_max + int(expected_shift // stepsize)
     else:
-        start_amp2 = data[:,1][arg_max - int(expected_shift // stepsize)]
-        start_mu2 = data[:,0][arg_max - int(expected_shift // stepsize)]
-    start_amp2 *= start_amp2 / max(voigt(data[:,0], start_amp2, start_mu2, start_alpha, start_gamma))
+        index = arg_max - int(expected_shift // stepsize)
+    
+
+    start_mu2 = data[:,0][index]
+    """
+    subtracted = data[:,1] - voigt(data[:,0], start_amp, start_mu, start_alpha, start_gamma)
+    argmu = np.argmax(data[:,1])
+    cutoff_low = max(argmu - int(expected_shift // stepsize // 2), 0)
+    cutoff_high = min(argmu - int(expected_shift // stepsize // 2), len(data[:,0])-1)
+    index_low = np.argmax(subtracted[0:cutoff_low]) 
+    index_high = np.argmax(subtracted[cutoff_high:len(data[:,0]) - 1]) + cutoff_high
+    index = index_low if subtracted[index_low] > subtracted[index_high] else index_high
+    # cut out a small region around the original mean to ensure other smaller peaks get the fit
+    start_mu2 = data[index,0]
+    start_amp2 = max(subtracted) / max(voigt(data[:,0], 1, start_mu2, start_alpha, start_gamma))
+    
+    #start_amp2 *= start_amp2 / (max(voigt(data[:,0], start_amp2, start_mu2, start_alpha, start_gamma)  - voigt(data[:,0], start_amp, start_mu2, start_alpha, start_gamma)))
+
+    if plot:
+        plt.axvline(x = start_mu2, linestyle = '--', color = 'orange')
+        plt.plot(data[:,0], voigt(data[:,0], start_amp, start_mu, start_alpha, start_gamma), color = 'cyan', label = 'voigt')
+        plt.scatter(data[:,0], subtracted, marker = '.', color = 'magenta', label = 'subtracted')
+        plt.plot(data[:,0], two_voigt(data[:,0], start_amp, start_mu, start_alpha, start_gamma, start_amp2, start_mu2, start_alpha, start_gamma, min(data[:,1])), label = "initial guess", color = 'r')
+        plt.scatter(data[:,0], data[:,1], label = "data", marker = '.', color = 'b')
+        plt.legend()
+        plt.show()
 
     params.add('amp', value = start_amp, min = 0)
     params.add('mu', value = start_mu)
@@ -190,8 +246,21 @@ voigt_models = {
 }
 
 if __name__ == '__main__':
+    """
     import matplotlib.pyplot as plt
     x = np.linspace(5748.5, 5750.5, 100)
     plt.plot(x, voigt(x, 1144, 5749, 0.05, 0.05))
     print(max(voigt(x, 1144, 5749, 0.05, 0.05)))
     plt.show()
+    """
+
+    from data.data_loader import read_data
+    data = read_data("data/final_data/mercury/main/3650_15")
+    params = two_voigt_params(data, 0.1)
+    #print(max(data[:,1]))
+    
+    #x = np.linspace(-5, 5, 100)
+    #plt.plot(x, voigt(x, 1, 0, 1, 1))
+    #plt.plot(x, voigt(x, 2, 0, 1, 1))
+    #plt.plot(x, voigt(x, 1/max(voigt(x, 1, 0, 1, 1)), 0, 1, 1))
+    #plt.show()

@@ -9,12 +9,13 @@ from numpy import exp, pi, sqrt
 import lmfit
 from data.data_loader import read_data
 from max_model import regions
-from noise_reduction import reduce_noise
 from models_2 import voigt_models
 from data_processing import process_data
 
 
 def execute_peak_fit(data, shift = 0, plot = False):
+
+    from noise_reduction import reduce_noise
 
     new_data, weights = reduce_noise(data)
     
@@ -43,12 +44,23 @@ def execute_peak_fit(data, shift = 0, plot = False):
     if 'mu2' in result.params.keys():
         amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
                 
+    """
     if plot:
         plt.scatter(data[i,0], data[i,1], marker = '.', label = "data")
         plt.plot(data[i,0], voigt_models['voigt_with_shift'][0](data[i,0], amp, mu, alpha, gamma, a), label = "primary peak", color = "orange")
         if choice == 'two_voigt':
             amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
             plt.plot(data[i,0], voigt_models[choice][0](data[i,0], amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a), label = "full fit", color = "lime")
+        plt.axvline(x = mu, label = "wavelength estimate", linestyle = '--', color = 'r')
+        plt.legend()
+        plt.show()
+    """
+    if plot:
+        plt.scatter(data[:,0], data[:,1], marker = '.', label = "data")
+        plt.plot(data[:,0], voigt_models['voigt_with_shift'][0](data[:,0], amp, mu, alpha, gamma, a), label = "primary peak", color = "orange")
+        if choice == 'two_voigt':
+            amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
+            plt.plot(data[:,0], voigt_models[choice][0](data[:,0], amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a), label = "full fit", color = "lime")
         plt.axvline(x = mu, label = "wavelength estimate", linestyle = '--', color = 'r')
         plt.legend()
         plt.show()
@@ -59,6 +71,7 @@ def execute_peak_fit(data, shift = 0, plot = False):
 # IMPLEMENTS IN DATA PROCESSING NOW
 # Also returns the entire result cuz its useful
 #
+
 def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, plot = False):
     
     if shift == 0:
@@ -66,7 +79,7 @@ def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, pl
         params = voigt_models[choice][1](processed_data)
     else:
         choice = 'two_voigt'
-        params = voigt_models[choice][1](processed_data, shift)
+        params = voigt_models[choice][1](processed_data, shift, plot = plot)
     
     model = lmfit.Model(voigt_models[choice][0])
 
@@ -84,19 +97,34 @@ def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, pl
 
     if 'mu2' in result.params.keys():
         amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
-                
-    if plot:
+
+    if plot:            
+    #if True:
         plt.scatter(processed_data[:,0], processed_data[:,1], marker = '.', label = "data")
         plt.plot(processed_data[:,0], voigt_models['voigt_with_shift'][0](processed_data[:,0], amp, mu, alpha, gamma, a), label = "primary peak", color = "orange")
         if choice == 'two_voigt':
             amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
             plt.plot(processed_data[:,0], voigt_models[choice][0](processed_data[:,0], amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a), label = "full fit", color = "lime")
+            plt.plot(processed_data[:,0], voigt_models['voigt_with_shift'][0](processed_data[:,0], amp2, mu2, alpha2, gamma2, a), label = "secondary peak", color = "green")
         plt.axvline(x = mu, label = "wavelength estimate", linestyle = '--', color = 'r')
         plt.legend()
         plt.show()
 
     return result.params
 
+# essentially, uses max model on noise-reduced data
+# used for wide, small, noisy peaks, which are too hard for our fitting to detect
+# add dictionary to maxmodel_peaks in main_calibration to use this model
+def naive_fit(data, damping_constant):
+
+    from noise_reduction import reduce_noise
+    from max_model import get_max
+    new_data, weights = reduce_noise(data, damping_constant = damping_constant, plot = True)
+    result = get_max(new_data)
+    print (result)
+    if result[0] == []:
+        return data[np.argmax(data[:,1]),0], (max(data[:,0]) - min(data[:,0])) / 4
+    return result[0][0], result[1][0]
 
 #
 # IMPLEMENTED IN DATA PROCESSING NOW
