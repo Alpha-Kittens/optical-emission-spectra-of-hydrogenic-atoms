@@ -176,7 +176,7 @@ check_6149_475 = {
 
 #check_peaks = [check_3125_668, check_3131_548, check_3654_836, check_4311_65, check_4347_494, check_4358_328, check_5425_253, check_5677_105, check_6149_475]
 check_peaks = [check_3125_668, check_3131_548, check_3654_836, check_4311_65, check_4347_494, check_4358_328, check_5677_105]
-sus_peaks = []
+sus_peaks = [check_3131_548, check_4311_65, check_4358_328]
 #sus_peaks = [check_3131_548, check_4347_494]
 maxmodel_peaks = [check_5425_253, check_6149_475]
 '''
@@ -255,7 +255,7 @@ for wavelength in main_peaks + check_peaks + H:
     #for i in range(len(data[key])):
         #entry = data[key][i]
 
-        print(wavelength["fp"])
+        #print(wavelength["fp"])
 
         entry = read_data(wavelength["fp"]) 
 
@@ -297,6 +297,11 @@ for wavelength in main_peaks + check_peaks + H:
         measured[key].append(mu)
         error[key].append(mu_err)
         '''
+
+        print ('--')
+        print (wavelength['true value'])
+        print (mu)
+        print (mu_err)
         
         if wavelength in H:
             measured['check'].append(mu)
@@ -370,7 +375,7 @@ inputs[:,0] = measured['reference']
 #inputs[:,1] = wavelengths['reference']
 inputs[:,1] = true_wavelengths['reference']
 
-result = fit(calibration_model, inputs, params, weights = error['reference']) # a slight approximation of the true weights but whatever (the slope is roughly 1).
+result = fit(calibration_model, inputs, params, weights = 1/np.array(error['reference'])) # a slight approximation of the true weights but whatever (the slope is roughly 1).
 
 calibration_file = "calibration.py"
 
@@ -426,13 +431,15 @@ if cube:
 chisqr = result.chisqr
 redchi = result.redchi
 
+#probably want to ignore the printed chi square values. I really don't understand them. 
+
 #plt.errorbar(measured['reference'], wavelengths['reference'], error['reference'], label = "calibration data", color = 'b', fmt = '.')
 plt.errorbar(measured['reference'], true_wavelengths['reference'], error['reference'], label = "calibration data", color = 'b', fmt = '.')
 plt.errorbar(measured['check'], true_wavelengths['check'], error['check'], label = "Hydrogen data", color = 'magenta', fmt = '.')
 x = np.linspace(min(min(measured['reference']), min(measured['check'])) - 100, max(max(measured['reference']), max(measured['check'])) + 100, 2010)
 plt.plot(x, calibration(x), label = "calibration curve", color = 'r')
-plt.text(5000, 4000, "Chi square: " + str(chisqr)) # truncate decimal
-plt.text(5000, 3800, "Reduced: " + str(redchi)) # truncate decimal
+plt.text(5000, 4000, "Chi square: %.4f" % chisqr) # truncate decimal
+plt.text(5000, 3800, "Reduced: %.4f" % redchi) # truncate decimal
 plt.xlabel("measured wavelength")
 plt.ylabel("actual wavelength")
 plt.legend()
@@ -444,7 +451,16 @@ plt.show()
 def chisquare(x, e):
     return np.dot(x-e, (x-e)/e)
 
+print (chisquare(calibration(np.array(measured['reference'])), true_wavelengths['reference']))
+
 print (chisquare(calibration(np.array(measured['check'])), true_wavelengths['check']))
+
+#for i in range(len(measured['check'])):
+#    print ("--")
+#    print (measured['check'][i])
+#    print (error['check'][i])
+#    print (calibration_error(measured['check'][i], error['check'][i]))
+
 #get chi square of performance on check data. 
 """
 # Test quadratic model

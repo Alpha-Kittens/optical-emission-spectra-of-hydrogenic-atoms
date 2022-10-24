@@ -73,7 +73,7 @@ def linear_plus_osc_err(x, x_err, a, a_err, b, b_err, n, n_err, omega, omega_err
 def cubic(x, a, b, c, d):
     return a * x**3 + b * x**2 + c * x + d
 
-def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err, d, d_err):
+def cubic_err(x, x_err, a, a_err, b, b_err, c, c_err, d, d_err):
     
     x_rel = x_err / x
     a_rel = a_err / a

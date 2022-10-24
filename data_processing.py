@@ -140,7 +140,7 @@ def get_cutoff(cps):
 
     cutoff = 1 + int(max(cps) // min(cps) / 50)
 
-    print ("The cutoff is ", binedges[cutoff], ". ", np.sum(hist[cutoff:]), "/", np.sum(hist), " of the data is above the cutoff.")
+    #print ("The cutoff is ", binedges[cutoff], ". ", np.sum(hist[cutoff:]), "/", np.sum(hist), " of the data is above the cutoff.")
 
     return binedges[cutoff]
 
