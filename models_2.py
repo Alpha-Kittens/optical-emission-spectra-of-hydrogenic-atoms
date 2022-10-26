@@ -4,19 +4,31 @@ from scipy.special import wofz
 from max_model import regions
 import matplotlib.pyplot as plt
 
-def linear(x, m, b):
+def linear(x, a, b):
     """
-    linear model y=mx+b
+    linear model y=ax+b
 
     Arguments: 
         * `x` : parameter value to evaluate the function at
-        * `m` : slope of the line
+        * `a` : slope of the line
         * `b` : y-intercept of the line
 
     Returns: 
         * `y` result of y=mx+b
     """
-    return (m*x)+b
+    return (a*x)+b
+
+def linear_err(x, x_err, a, a_err, b, b_err):
+
+    x_rel = x_err / x
+    a_rel = a_err / a
+    b_rel = b_err / b
+
+    return ((a * x)**2 * (a_rel**2 + x_rel**2) + b_err ** 2)**(1/2)
+
+def quadratic_2(x, x_0, a, b, c):
+
+    pass
 
 def quadratic(x, a, b, c):
     """
@@ -58,6 +70,20 @@ def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err):
     print ("c contribution: "+str(c_err))
 
     return ((a * x**2)**2 * (a_rel**2 + 2 * x_rel**2) + (b * x)**2 * (b_rel ** 2 + x_rel**2) + c_err ** 2) ** (1/2)
+
+def exponential(x, a, b, n, r, o):
+    return a * x + b + n * np.exp(r*(x-o))
+
+def exponential_err(x, x_err, a, a_err, b, b_err, n, n_err, r, r_err, o, o_err):
+    x_rel = x_err / x
+    a_rel = a_err / x
+    b_rel = b_err / x
+    n_rel = n_err / x
+    r_rel = r_err / x
+    o_rel = o_err / x
+
+    #exponent_err = 
+
 
 def inverse_quadratic(true, a, b, c):
 
@@ -218,6 +244,7 @@ def two_voigt_params(data, expected_shift, plot = True, stepsize = 0.0025):
     
     #start_amp2 *= start_amp2 / (max(voigt(data[:,0], start_amp2, start_mu2, start_alpha, start_gamma)  - voigt(data[:,0], start_amp, start_mu2, start_alpha, start_gamma)))
 
+    """
     if plot:
         plt.axvline(x = start_mu2, linestyle = '--', color = 'orange')
         plt.plot(data[:,0], voigt(data[:,0], start_amp, start_mu, start_alpha, start_gamma), color = 'cyan', label = 'voigt')
@@ -226,6 +253,7 @@ def two_voigt_params(data, expected_shift, plot = True, stepsize = 0.0025):
         plt.scatter(data[:,0], data[:,1], label = "data", marker = '.', color = 'b')
         plt.legend()
         plt.show()
+    """
 
     params.add('amp', value = start_amp, min = 0)
     params.add('mu', value = start_mu)

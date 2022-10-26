@@ -126,6 +126,7 @@ def get_regions(cps, cutoff, reduce = False):
 
 
 
+# max model, HWHM cutoff
 def get_cutoff(cps):
     """
     Given an array of positive values, determines a cutoff do distinguish signal from noise. This algorithm is not particularly refined.

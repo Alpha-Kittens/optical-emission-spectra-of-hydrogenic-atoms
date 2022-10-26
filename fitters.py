@@ -62,6 +62,7 @@ def execute_peak_fit(data, shift = 0, plot = False):
             amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
             plt.plot(data[:,0], voigt_models[choice][0](data[:,0], amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a), label = "full fit", color = "lime")
         plt.axvline(x = mu, label = "wavelength estimate", linestyle = '--', color = 'r')
+        #plt.axvline(x = true, label = "true wavelength", linestyle = '--', color = 'magenta')
         plt.legend()
         plt.show()
 
@@ -100,7 +101,7 @@ def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, pl
 
     if plot:            
     #if True:
-        plt.scatter(processed_data[:,0], processed_data[:,1], marker = '.', label = "data")
+        plt.errorbar(processed_data[:,0], processed_data[:,1], yerr = 1/weights, marker = '.', label = "data")
         plt.plot(processed_data[:,0], voigt_models['voigt_with_shift'][0](processed_data[:,0], amp, mu, alpha, gamma, a), label = "primary peak", color = "orange")
         if choice == 'two_voigt':
             amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
@@ -109,7 +110,8 @@ def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, pl
         plt.axvline(x = mu, label = "wavelength estimate", linestyle = '--', color = 'r')
         plt.legend()
         plt.show()
-
+    print ("chi square: "+str(result.chisqr))
+    print ("chi square: "+str(result.redchi))
     return result.params
 
 # essentially, uses max model on noise-reduced data
@@ -165,12 +167,12 @@ def fit (model, data, params=None, weights =None):
     y_axis = data[:, 1]
     
     if(params is None and weights is None):
-        result = model.fit(y_axis, x=x_axis)
+        result = model.fit(y_axis, x=x_axis, scale_covar = False)
     elif (params is None):
-        result = model.fit(y_axis, x=x_axis, weights=weights)
+        result = model.fit(y_axis, x=x_axis, weights=weights, scale_covar = False)
     elif (weights is None):
-        result = model.fit(y_axis, params=params, x=x_axis)
+        result = model.fit(y_axis, params=params, x=x_axis, scale_covar = False)
     else:
-        result = model.fit(y_axis, params=params, x=x_axis, weights=weights)
+        result = model.fit(y_axis, params=params, x=x_axis, weights=weights, scale_covar = False)
     return result
 

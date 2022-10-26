@@ -176,7 +176,7 @@ check_6149_475 = {
 
 #check_peaks = [check_3125_668, check_3131_548, check_3654_836, check_4311_65, check_4347_494, check_4358_328, check_5425_253, check_5677_105, check_6149_475]
 check_peaks = [check_3125_668, check_3131_548, check_3654_836, check_4311_65, check_4347_494, check_4358_328, check_5677_105]
-sus_peaks = [check_3131_548, check_4311_65, check_4358_328]
+sus_peaks = [check_3131_548, check_4311_65, check_4358_328, check_5677_105, check_3125_668]
 #sus_peaks = [check_3131_548, check_4347_494]
 maxmodel_peaks = [check_5425_253, check_6149_475]
 '''
@@ -297,7 +297,7 @@ for wavelength in main_peaks + check_peaks + H:
         measured[key].append(mu)
         error[key].append(mu_err)
         '''
-
+        mu_err *= 100
         print ('--')
         print (wavelength['true value'])
         print (mu)
@@ -337,10 +337,17 @@ plt.legend()
 plt.show()
 """
 
-
+lin = False
 quad = True
-sin = False
 cube = False
+sin = False
+
+if lin:
+    calibration_model = lmfit.Model(linear)
+    params = lmfit.Parameters()
+    params.add('a', value = 1)
+    params.add('b', value = 0)
+    calibration_error = linear_err
 
 if quad:
     calibration_model = lmfit.Model(quadratic)
@@ -379,8 +386,16 @@ result = fit(calibration_model, inputs, params, weights = 1/np.array(error['refe
 
 calibration_file = "calibration.py"
 
-write = input("Write file? y/n ") == 'y'
-
+if lin:
+    a, b = result.params['a'].value, result.params['b'].value
+    calibration = lambda x : linear(x, a, b)
+    a_err, b_err = result.params['a'].stderr, result.params['b'].stderr
+    calibration_error = lambda x, x_err : linear_err(x, x_err, a, a_err, b, b_err)
+    #if write:
+    #    with open(calibration_file, 'w') as f:
+    #        f.write("from models_2 import linear, linear_err\n")
+    #        f.write("calibration = lambda x : linear(x, "+str(a)+","+str(b)+")\n")
+    #        f.write("calibration_error = lambda x, x_err : linear_err(x,x_err,"+str(a)+","+str(a_err)+","+str(b)+","+str(b_err)+")\n")
 if quad:
     a, b, c = result.params['a'].value, result.params['b'].value, result.params['c'].value
 
@@ -389,12 +404,12 @@ if quad:
     b_err = result.params['b'].stderr
     c_err = result.params['c'].stderr
     calibration_error = lambda x, x_err : quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err)
-    if write:
-        with open(calibration_file, 'w') as f:
-            f.write("from models_2 import quadratic, quadratic_err, inverse_quadratic\n")
-            f.write("calibration = lambda x : quadratic(x, "+str(a)+","+str(b)+","+str(c)+")\n")
-            f.write("calibration_error = lambda x, x_err : quadratic_err(x,x_err,"+str(a)+","+str(a_err)+","+str(b)+","+str(b_err)+","+str(c)+","+str(c_err)+")\n")
-            f.write("uncalibration = lambda true : inverse_quadratic(true,"+str(a)+","+str(b)+","+str(c)+")\n")
+    #if write:
+    #    with open(calibration_file, 'w') as f:
+    #        f.write("from models_2 import quadratic, quadratic_err, inverse_quadratic\n")
+    #        f.write("calibration = lambda x : quadratic(x, "+str(a)+","+str(b)+","+str(c)+")\n")
+    #        f.write("calibration_error = lambda x, x_err : quadratic_err(x,x_err,"+str(a)+","+str(a_err)+","+str(b)+","+str(b_err)+","+str(c)+","+str(c_err)+")\n")
+    #        f.write("uncalibration = lambda true : inverse_quadratic(true,"+str(a)+","+str(b)+","+str(c)+")\n")
 
 if sin:
     a, b, n, omega, phi = result.params['a'].value, result.params['b'].value, result.params['n'].value, result.params['omega'].value, result.params['phi'].value
@@ -406,10 +421,10 @@ if sin:
     omega_err = result.params['omega'].stderr
     phi_err = result.params['phi'].stderr
 
-    if write:
-        with open(calibration_file, 'w') as f:
-            f.write("from models_2 import linear_plus_osc\n")
-            f.write("calibration = lambda x : linear_plus_osc(x, "+str(a)+", "+str(b)+", "+str(n)+", "+str(omega)+", "+str(phi)+")\n")
+    #if write:
+    #    with open(calibration_file, 'w') as f:
+    #        f.write("from models_2 import linear_plus_osc\n")
+    #        f.write("calibration = lambda x : linear_plus_osc(x, "+str(a)+", "+str(b)+", "+str(n)+", "+str(omega)+", "+str(phi)+")\n")
 
 if cube:
     a, b, c, d = result.params['a'].value, result.params['b'].value, result.params['c'].value, result.params['d'].value
@@ -420,12 +435,7 @@ if cube:
     c_err = result.params['c'].stderr   
     d_err = result.params['d'].stderr
 
-    if write:
-        with open(calibration_file, 'w') as f:
-            f.write("from models_2 import cubic, cubic_err\n")
-            f.write("calibration = lambda x : cubic(x, "+str(a)+","+str(b)+","+str(c)+","+str(d)+")\n")
-            f.write("calibration_error = lambda x, x_err : cubic(x,x_err,"+str(a)+","+str(a_err)+","+str(b)+","+str(b_err)+","+str(c)+","+str(c_err)+","+str(d)+","+str(d_err)+")\n")
-
+    
 
 
 chisqr = result.chisqr
@@ -444,6 +454,43 @@ plt.xlabel("measured wavelength")
 plt.ylabel("actual wavelength")
 plt.legend()
 plt.show()
+
+# plot residuals
+plt.errorbar(measured['reference'], calibration(np.array(measured['reference'])) - true_wavelengths['reference'], np.array(error['reference']), label = "calibration residuals", color = 'b', fmt = '.')
+plt.errorbar(measured['check'], calibration(np.array(measured['check'])) - true_wavelengths['check'], np.array(error['check']), label = "Hydrogen residuals", color = 'magenta', fmt = '.')
+x = np.linspace(min(min(measured['reference']), min(measured['check'])) - 100, max(max(measured['reference']), max(measured['check'])) + 100, 2010)
+plt.axhline(y = 0, linestyle = '--', color = 'r')
+plt.text(5000, 4000, "Chi square: %.4f" % chisqr) # truncate decimal
+plt.text(5000, 3800, "Reduced: %.4f" % redchi) # truncate decimal
+plt.xlabel("measured wavelength")
+plt.ylabel("residuals")
+plt.legend()
+plt.show()
+
+write = input("Write file? y/n ") == 'y'
+if write:
+    if lin:
+        with open(calibration_file, 'w') as f:
+            f.write("from models_2 import linear, linear_err\n")
+            f.write("calibration = lambda x : linear(x, "+str(a)+","+str(b)+")\n")
+            f.write("calibration_error = lambda x, x_err : linear_err(x,x_err,"+str(a)+","+str(a_err)+","+str(b)+","+str(b_err)+")\n")
+    if quad:
+        with open(calibration_file, 'w') as f:
+            f.write("#ur mom\n")
+            f.write("from models_2 import quadratic, quadratic_err, inverse_quadratic\n")
+            f.write("calibration = lambda x : quadratic(x, "+str(a)+","+str(b)+","+str(c)+")\n")
+            f.write("calibration_error = lambda x, x_err : quadratic_err(x,x_err,"+str(a)+","+str(a_err)+","+str(b)+","+str(b_err)+","+str(c)+","+str(c_err)+")\n")
+            f.write("uncalibration = lambda true : inverse_quadratic(true,"+str(a)+","+str(b)+","+str(c)+")\n")
+    if cube:
+        with open(calibration_file, 'w') as f:
+            f.write("from models_2 import cubic, cubic_err\n")
+            f.write("calibration = lambda x : cubic(x, "+str(a)+","+str(b)+","+str(c)+","+str(d)+")\n")
+            f.write("calibration_error = lambda x, x_err : cubic(x,x_err,"+str(a)+","+str(a_err)+","+str(b)+","+str(b_err)+","+str(c)+","+str(c_err)+","+str(d)+","+str(d_err)+")\n")
+
+    if sin:
+        with open(calibration_file, 'w') as f:
+            f.write("from models_2 import linear_plus_osc\n")
+            f.write("calibration = lambda x : linear_plus_osc(x, "+str(a)+", "+str(b)+", "+str(n)+", "+str(omega)+", "+str(phi)+")\n")
 # File path to small peak data files
 # Read data
 # Voigt Model & Fit
