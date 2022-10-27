@@ -10,6 +10,8 @@ import math
 from fitters import fit_to_voigt
 from calibration import calibration, calibration_error
 from data_processing import process_data
+from  max_model import hwhm_max
+
 
 
 
@@ -69,20 +71,16 @@ for key in information:
     #Process data
     processed_data, weights = process_data(data, plot_noise_reduction=True)
 
-    shift = float(input("Enter the difference between the two peaks (enter 0 if NA): "))
 
-    #Fitting
-    result_params  = fit_to_voigt(processed_data, weights, shift, plot=True)
+    # Obtain wavelength and error from max model
+    uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, plot=True)
+
 
     # Calculating the Shift
-    wavelength["deuterium"] = calibration(result_params["mu"].value)
+    wavelength["deuterium"] = calibration(uncalibrated_wavelength)
     wavelength["shift"] = wavelength["hydrogen"] - wavelength["deuterium"]
 
-    wavelength["shift_error"] = calibration_error(result_params["mu"].value, result_params["mu"].stderr)
-
-    print("Shift error pre-calibration: " + str(result_params["mu"].stderr))
-    print("Shift error " + str(wavelength["shift_error"]))
-    print("Shift  " + str(wavelength["shift"]))
+    wavelength["shift_error"] = calibration_error(uncalibrated_wavelength, uncalibrated_uncertainty)
 
 
     # Balmer Formula to find ratio of deuterium to proton mass
