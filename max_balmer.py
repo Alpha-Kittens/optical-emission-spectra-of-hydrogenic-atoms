@@ -10,6 +10,7 @@ import math
 from calibration import calibration
 from calibration import calibration_error
 from data_processing import process_data
+from  max_model import hwhm_max
 
 # File Path to peak data files
 folder = 'data/final_data/hydrogen/'
@@ -70,19 +71,20 @@ for key in information:
 
     processed_data,weights = process_data(data, plot_noise_reduction=True)
 
-    result_params  = fit_to_voigt(processed_data, weights, plot=True)
+    uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, plot=True)
 
-    wavelength["params"] = result_params
 
     # Calibration to convert the wavelengths
-    true_wavelength = calibrate(wavelength["params"]['mu'].value)
-    true_uncertainty = calibrate_error(wavelength["params"]['mu'].value,wavelength["params"]['mu'].stderr)
-  
+    true_wavelength = calibration(uncalibrated_wavelength)
+    true_uncertainty = calibration_error(uncalibrated_wavelength,uncalibrated_uncertainty)
+
     wavelength["wavelength"] = true_wavelength
     wavelength["wavelength_unc"] = true_uncertainty
 
+    
 
-    # Bohr Formula to find Rydhberg Const.
+
+    # Bohr Formula to find Rydberg Const.
     wavelength["R_H"] = 1/(((wavelength["wavelength"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
     wavelength["R_H  unc"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc"])
 

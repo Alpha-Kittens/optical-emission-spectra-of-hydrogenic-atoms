@@ -112,6 +112,9 @@ def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, pl
         plt.show()
     print ("chi square: "+str(result.chisqr))
     print ("chi square: "+str(result.redchi))
+
+    print(lmfit.fit_report(result))
+
     return result.params
 
 # essentially, uses max model on noise-reduced data
