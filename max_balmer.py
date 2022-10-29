@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import models_2 as models
 import noise_reduction
 import math
-from calibration import calibration
-from calibration import calibration_error
+from calibration import calibrate
+from calibration import calibrate_error
 from data_processing import process_data
 from  max_model import hwhm_max
 
@@ -32,18 +32,25 @@ R_inf = 10973731.568160 #m^-1
 alpha = {
     "fp" : alpha_H_fp,
     "ni"   : 3,
+    "reference" : 6562.79
 }
 beta = {
     "fp" : beta_H_fp,
     "ni"   : 4,
+    "reference" : 4861.35
+
 }
 gamma = {
     "fp" : gamma_H_fp,
     "ni"   : 5,
+    "reference" : 4340.47
+
 }
 delta = {
     "fp" : delta_H_fp,
     "ni"   : 6,
+    "reference" : 4101.74
+
 }
 
 
@@ -69,34 +76,31 @@ for key in information:
     # Read data
     data = data_loader.read_data(wavelength["fp"])
 
-    processed_data,weights = process_data(data, plot_noise_reduction=True)
+    processed_data,weights, noise_reduced = process_data(data, plot_noise_reduction=True, noise_reduced=True)
 
-    uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, plot=True)
+    uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, noise_reduced=noise_reduced, plot=True)
 
 
     # Calibration to convert the wavelengths
-    true_wavelength = calibration(uncalibrated_wavelength)
-    true_uncertainty = calibration_error(uncalibrated_wavelength,uncalibrated_uncertainty)
+    true_wavelength = calibrate(uncalibrated_wavelength)
+    true_uncertainty_stat = calibrate_error(uncalibrated_wavelength,uncalibrated_uncertainty)[0]
+    true_uncertainty_sys = calibrate_error(uncalibrated_wavelength,uncalibrated_uncertainty)[1]
 
     wavelength["wavelength"] = true_wavelength
-    wavelength["wavelength_unc"] = true_uncertainty
+    wavelength["wavelength_unc_sys"] = true_uncertainty_sys
+    wavelength["wavelength_unc_stat"] = true_uncertainty_stat
 
-    
+    print("Systematic uncertainty: " + str(wavelength["wavelength_unc_sys"]))
+    print("Statistical uncertainty: " + str(wavelength["wavelength_unc_stat"]))
 
 
-    # Bohr Formula to find Rydberg Const.
+
+    # Bohr Formula to find Rydhberg Const.
     wavelength["R_H"] = 1/(((wavelength["wavelength"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
-    wavelength["R_H  unc"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc"])
+    wavelength["R_H_unc_sys"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc_sys"])
+    wavelength["R_H_unc_stat"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc_stat"])
+    wavelength["R_H_unc_tot"] = math.sqrt(wavelength["R_H_unc_sys"]**2 + wavelength["R_H_unc_stat"]**2)
 
-
-    # Determining the Temperature
-    alpha = calibration(wavelength["params"]['alpha'].value + wavelength["params"]['mu'].value) - true_wavelength
-
-    constant_term = ((m_p)*(c**2)/(k_B))
-    ratio_term = alpha/(true_wavelength)
-
-    wavelength["temperature"] = constant_term*(ratio_term**2)/(2*math.log(2))
-    print('temperature: ' + str(wavelength["temperature"]))
 
 
 
@@ -139,20 +143,57 @@ numerator = 0
 denominator = 0
 for key in information:
     wavelength = information[key]
-    numerator += wavelength["R_H"] / ((wavelength["R_H  unc"])**2)
-    denominator += 1/((wavelength["R_H  unc"])**2)
+    numerator += wavelength["R_H"] / ((wavelength["R_H_unc_tot"])**2)
+    denominator += 1/((wavelength["R_H_unc_tot"])**2)
 
 mean = numerator/denominator
 print(mean)
 
 uncertainty = 1/math.sqrt(denominator)
 
+#Standard Deviation
+sum = 0
+for key in information:
+    wavelength = information[key]
+    sum += (wavelength["R_H"] - mean)**2
+std_dev = math.sqrt(sum/(len(information)))
+
+std_error = std_dev/math.sqrt(len(information))
+
 results = {
     "mean" : mean,
     "uncertainty" : uncertainty,
+    "standard deviation": std_dev,
+    "standard error" : std_error
 }
 
 print(results)
+
+
+#Make a plot
+n = []
+wavelengths = []
+errors = []
+references = []
+residuals = []
+
+for key in information:
+    wavelength = information[key]
+    n.append(wavelength["ni"])
+    wavelengths.append(wavelength["wavelength"])
+    references.append(wavelength["reference"])
+    residuals.append(wavelength["wavelength"] - wavelength["reference"])
+    errors.append(math.sqrt(wavelength["wavelength_unc_stat"]**2 + wavelength["wavelength_unc_sys"]**2))
+
+#plt.errorbar(n, wavelengths, errors, fmt='o')
+#plt.errorbar(n, references, fmt='o')
+plt.errorbar(n, residuals,errors, fmt='o')
+plt.xlabel('initial n')
+plt.ylabel('(measured wavelength - reference value) (A)')
+plt.show()
+
+
+
 
 
 # Write to a file (to be read by isotope shift)

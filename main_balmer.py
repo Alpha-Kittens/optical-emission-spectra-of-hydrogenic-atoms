@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 import models_2 as models
 import noise_reduction
 import math
-from calibration import calibration
-from calibration import calibration_error
+from calibration import calibrate, calibrate_error
 from data_processing import process_data
 
 # File Path to peak data files
@@ -75,20 +74,26 @@ for key in information:
     wavelength["params"] = result_params
 
     # Calibration to convert the wavelengths
-    true_wavelength = calibration(wavelength["params"]['mu'].value)
-    true_uncertainty = calibration_error(wavelength["params"]['mu'].value,wavelength["params"]['mu'].stderr)
+    true_wavelength = calibrate(wavelength["params"]['mu'].value)
+    true_uncertainty_stat = calibrate_error(wavelength["params"]['mu'].value,wavelength["params"]['mu'].stderr)[0]
+    true_uncertainty_sys = calibrate_error(wavelength["params"]['mu'].value,wavelength["params"]['mu'].stderr)[1]
+
   
     wavelength["wavelength"] = true_wavelength
-    wavelength["wavelength_unc"] = true_uncertainty
+    wavelength["wavelength_unc_sys"] = true_uncertainty_sys
+    wavelength["wavelength_unc_stat"] = true_uncertainty_stat
 
 
     # Bohr Formula to find Rydhberg Const.
     wavelength["R_H"] = 1/(((wavelength["wavelength"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
-    wavelength["R_H  unc"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc"])
+    wavelength["R_H_unc_sys"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc_sys"])
+    wavelength["R_H_unc_stat"] = (wavelength["R_H"]/(wavelength["wavelength"]))*(wavelength["wavelength_unc_stat"])
+    wavelength["R_H_unc_tot"] = math.sqrt(wavelength["R_H_unc_sys"]**2 + wavelength["R_H_unc_stat"]**2)
+
 
 
     # Determining the Temperature
-    alpha = calibration(wavelength["params"]['alpha'].value + wavelength["params"]['mu'].value) - true_wavelength
+    alpha = calibrate(wavelength["params"]['alpha'].value + wavelength["params"]['mu'].value) - true_wavelength
 
     constant_term = ((m_p)*(c**2)/(k_B))
     ratio_term = alpha/(true_wavelength)
@@ -137,17 +142,29 @@ numerator = 0
 denominator = 0
 for key in information:
     wavelength = information[key]
-    numerator += wavelength["R_H"] / ((wavelength["R_H  unc"])**2)
-    denominator += 1/((wavelength["R_H  unc"])**2)
+    numerator += wavelength["R_H"] / ((wavelength["R_H_unc_tot"])**2)
+    denominator += 1/((wavelength["R_H_unc_tot"])**2)
+    print("Rydberg uncertainty " + str(wavelength["R_H_unc_tot"]))
 
 mean = numerator/denominator
 print(mean)
 
 uncertainty = 1/math.sqrt(denominator)
 
+#Standard Deviation
+sum = 0
+for key in information:
+    wavelength = information[key]
+    sum += (wavelength["R_H"] - mean)**2
+std_dev = sum/math.sqrt(len(information))
+
+std_error = std_dev/math.sqrt(len(information))
+
 results = {
     "mean" : mean,
     "uncertainty" : uncertainty,
+    "standard deviation": std_dev,
+    "standard error" : std_error
 }
 
 print(results)
