@@ -156,7 +156,7 @@ sum = 0
 for key in information:
     wavelength = information[key]
     sum += (wavelength["R_H"] - mean)**2
-std_dev = sum/math.sqrt(len(information))
+std_dev = math.sqrt(sum/(len(information)))
 
 std_error = std_dev/math.sqrt(len(information))
 
