@@ -1,9 +1,11 @@
 from cmath import sqrt
+from operator import truediv
 from calibration import *
 import numpy as np
 from data import data_loader
 from data_processing import process_data
 from max_model import hwhm_max
+import matplotlib.pyplot as plt
 
 """
 Expected peaks:
@@ -39,27 +41,35 @@ folder = 'data/final_data/sodium/'
 
 a = {
     'transition' : "7s --> 4p",
+    "n" : 7
 }
 b = {
-    'transition' : "4p --> 3s"
+    'transition' : "4p --> 3s",
+    "n" : 3
 }
 c = {
-    'transition' : "5d --> 4p"
+    'transition' : "5d --> 4p",
+    'n': 5
 }
 d = {
-    'transition' : "6s --> 4p"
+    'transition' : "6s --> 4p",
+    'n' : 6
 }
 e = {
-    'transition' : "6d --> 4p"
+    'transition' : "6d --> 4p",
+    'n' : 6
 }
 f = {
-    'transition' : "7s --> 4p"
+    'transition' : "7s --> 4p",
+    'n' : 7
 }
 g = {
-    'transition' : "7d --> 4p"
+    'transition' : "7d --> 4p",
+    'n' : 7
 }
 h = {
-    'transition' : ""
+    'transition' : "",
+    'n' : 0
 }
 
 #Collect all the splittings
@@ -67,7 +77,7 @@ information = {
     'a' : a,
     'b' : b,
     "c" : c,
-    "d" : d,
+#    "d" : d,
     "e" : e,
     "f" : f,
     "g" : g,
@@ -85,35 +95,58 @@ for key in information:
         data = data_loader.read_data(wavelength["fp_" + str(i)])
 
         #Process data
-        processed_data, weights = process_data(data, plot_noise_reduction=True)
+        processed_data, weights, noise_reduced = process_data(data, plot_noise_reduction=True, noise_reduced=True, title=wavelength["transition"])
 
         # Obtain wavelength and error from max model
-        uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, plot=True)
+        uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, plot=True, noise_reduced=noise_reduced)
 
         # Calibration
         wavelength["unc_wavelength_" + str(i)] = uncalibrated_wavelength
         wavelength["unc_uncertainty_" + str(i)] = uncalibrated_uncertainty
 
         wavelength["wavelength_" + str(i)] = calibrate(uncalibrated_wavelength)
-        wavelength["uncertainty_" + str(i)] = calibrate_error(uncalibrated_wavelength, uncalibrated_uncertainty)
+        wavelength["stat_uncertainty_" + str(i)] = calibrate_error(uncalibrated_wavelength, uncalibrated_uncertainty)[0]
+        wavelength["stat_uncertainty_" + str(i)] = calibrate_error(uncalibrated_wavelength, uncalibrated_uncertainty)[1]
     
 
     wavelength['splitting'] = calibrate_splitting(wavelength["unc_wavelength_1"], wavelength["unc_wavelength_2"])
-    wavelength["splitting_uncertainty"] = calibrate_splitting_error(wavelength["unc_wavelength_1"], wavelength["unc_wavelength_2"], wavelength["unc_uncertainty_1"], wavelength["unc_uncertainty_2"])
+    wavelength["stat_splitting_uncertainty"] = calibrate_splitting_error(wavelength["unc_wavelength_1"], wavelength["unc_wavelength_2"], wavelength["unc_uncertainty_1"], wavelength["unc_uncertainty_2"])[0]
+    wavelength["sys_splitting_uncertainty"] = calibrate_splitting_error(wavelength["unc_wavelength_1"], wavelength["unc_wavelength_2"], wavelength["unc_uncertainty_1"], wavelength["unc_uncertainty_2"])[1]
+    wavelength["splitting_uncertainty_tot"] = sqrt(wavelength["stat_splitting_uncertainty"]**2 + wavelength["sys_splitting_uncertainty"]**2)
 
     print("Splitting: " + str(wavelength['splitting']))
-    print("Spliting Error: " + str(wavelength['splitting_uncertainty']))
+    print("Spliting Error: " + str(wavelength['splitting_uncertainty_tot']))
 
 #Weigted Average
 numerator = 0
 denominator = 0
 for key in information:
     wavelength = information[key]
-    numerator += wavelength['splitting'] /(wavelength['splitting_uncertainty'] **2)
-    denominator += 1/(wavelength['splitting_uncertainty'] **2)
+    numerator += wavelength['splitting'] /(wavelength['splitting_uncertainty_tot'] **2)
+    denominator += 1/(wavelength['splitting_uncertainty_tot'] **2)
 
 weighted_average = numerator/denominator
 weighted_uncertainty = 1/sqrt(denominator)
 
-print("Average splitting" + str(weighted_average))
+print("Average splitting: " + str(weighted_average))
 print("Uncertainty: " + str(weighted_uncertainty))
+
+
+# Plotting
+wavelengths = []
+splittings = []
+errors = []
+n = []
+
+for key in information:
+    wavelength = information[key]
+    wavelengths.append(wavelength["wavelength_1"])
+    splittings.append(wavelength["splitting"])
+    errors.append(wavelength["splitting_uncertainty_tot"])
+    n.append(wavelength['n'])
+
+plt.xlabel("~Wavelength (A)")
+plt.ylabel("Splitting (A)")
+
+plt.errorbar(wavelengths, splittings, errors, fmt='o')
+plt.show()
