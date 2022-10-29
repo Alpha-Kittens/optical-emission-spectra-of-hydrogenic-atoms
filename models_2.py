@@ -71,6 +71,25 @@ def quadratic_err(x, x_err, a, a_err, b, b_err, c, c_err):
 
     return ((a * x**2)**2 * (a_rel**2 + 2 * x_rel**2) + (b * x)**2 * (b_rel ** 2 + x_rel**2) + c_err ** 2) ** (1/2)
 
+
+def rydberg_model(x, a=1e6):
+    """
+    gives wavelength from the balmer formula with the rydberg constant as a parameter
+    y= 1/(a(1/4 - 1/x^2))
+
+    Arguments: 
+        * `x` : parameter value to evaluate the function at
+        * `a` : leading coefficient
+
+    Returns: 
+        * `y` : result of y=1/(a(1/4 - 1/x^2))
+    """
+
+    y = 1/(a*((1/4) - 1/(x**2)))
+
+    return 1/(a*((1/4) - 1/(x**2)))
+
+
 def exponential(x, a, b, n, r, o):
     return a * x + b + n * np.exp(r*(x-o))
 
