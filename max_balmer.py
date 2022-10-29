@@ -104,6 +104,9 @@ for key in information:
     wavelength["R_H_unc_tot"] = math.sqrt(wavelength["R_H_unc_sys"]**2 + wavelength["R_H_unc_stat"]**2)
 
 
+    # Rydberg Calculated from Reference values
+    wavelength["ref_R_H"] = 1/(((wavelength["reference"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
+
 
 
     '''
@@ -195,6 +198,21 @@ plt.xlabel('initial n')
 plt.ylabel('(measured wavelength - reference value) (A)')
 plt.show()
 
+
+measured_rydbergs = []
+true_rydbergs = []
+rydberg_error = []
+sum = 0
+for key in information:
+    wavelength = information[key]
+    sum += wavelength["ref_R_H"]
+    true_rydbergs.append(wavelength["ref_R_H"])
+    measured_rydbergs.append(wavelength["R_H"])
+
+# Average ref rydberg
+ref_rydberg = sum/len(information)
+
+print('Reference rydberg: ' + str(ref_rydberg))
 
 
 
