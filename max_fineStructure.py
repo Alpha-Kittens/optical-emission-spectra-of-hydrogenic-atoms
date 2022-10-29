@@ -77,12 +77,14 @@ information = {
     'a' : a,
     'b' : b,
     "c" : c,
-#    "d" : d,
+    "d" : d,
     "e" : e,
     "f" : f,
     "g" : g,
     "h" : h
 }
+
+slicent_peaks = [d]
 
 for key in information:
 
@@ -90,12 +92,13 @@ for key in information:
     wavelength["fp_1"] = folder + key + "L"
     wavelength["fp_2"] = folder + key + "H"
 
-    for i in range(1, 3):
+    #for i in range(1, 3):
+    for i in [2]:
         # Read data
         data = data_loader.read_data(wavelength["fp_" + str(i)])
 
         #Process data
-        processed_data, weights, noise_reduced = process_data(data, plot_noise_reduction=True, noise_reduced=True, title=wavelength["transition"])
+        processed_data, weights, noise_reduced = process_data(data, plot_noise_reduction=True, noise_reduced=True, title=wavelength["transition"], slice = wavelength not in slicent_peaks)
 
         # Obtain wavelength and error from max model
         uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, plot=True, noise_reduced=noise_reduced)

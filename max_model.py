@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import numpy as np
 from data.data_loader import read_data
 import matplotlib.pyplot as plt
@@ -14,7 +15,7 @@ def smear(derivatives, i, width = 5):
     return np.dot(derivatives[min_i : max_i], (1 - (dists / width)**2)) / np.sum(1 - (dists / width)**2)
 
 
-def hwhm_max(data, weights, noise_reduced = None, plot = True, true_wavelength = None, threshold = 1/2):
+def hwhm_max(data, weights, noise_reduced = None, plot = True, true_wavelength = None, threshold = 1/2, give_weights = False):
 
     data_half = (max(data[:,1]) + min(data[:,1])) * threshold
 
@@ -34,6 +35,20 @@ def hwhm_max(data, weights, noise_reduced = None, plot = True, true_wavelength =
         
         d_weights = 1 / (2*max(np.abs(derivatives[data_above[:-1]]))/3 + np.abs(derivatives[data_above[:-1]]))
         sd_weights = (1 + -second_derivatives / max(np.abs(second_derivatives)))/2
+
+        #print (data_above)
+        if plot:
+            plt.title("hwhm max model on scan for "+str(true_wavelength))
+            plt.xlabel("Wavelength reading (A)")
+            plt.ylabel("CPS")
+            #plt.plot(cut_wavelengths, averaging_weights * max(data[:,1]) / max(averaging_weights), label = "scaled averaging weights", c = 'lime')
+            plt.errorbar(data[data_below,0], data[data_below,1], yerr = weights[data_below], label = "excluded data", marker = '.', c = 'b', ls='none')
+            plt.errorbar(cut_wavelengths, data[data_above,1], yerr = cut_weights, label = "included data", marker = '.', c = 'orange', ls='none')
+            #plt.axvline(x = w_max, label = "wavelength estimate", c = 'r', linestyle = '--')
+            #plt.axvline(x = w_max - w_err, label = "error bounds", c = 'magenta', linestyle = '--')
+            #plt.axvline(x = w_max + w_err, c = 'magenta', linestyle = '--')
+            plt.legend()
+            plt.show()
 
         averaging_weights = np.sqrt(data[data_above, 1]) * sd_weights[data_above[:-2]]
 
@@ -75,7 +90,10 @@ def hwhm_max(data, weights, noise_reduced = None, plot = True, true_wavelength =
         plt.legend()
         plt.show()
 
-    return w_max, w_err
+    if give_weights:
+        return w_max, w_err, averaging_weights
+    else:
+        return w_max, w_err
 
 def hwhm_max_for_losers(data, weights, plot = True, true_wavelength = None):
 
@@ -92,7 +110,7 @@ def hwhm_max_for_losers(data, weights, plot = True, true_wavelength = None):
     w_err = np.sqrt(np.dot((cut_wavelengths - w_max)**2, averaging_weights) / np.sum(averaging_weights))
 
     if plot:
-        plt.title("hwhm max model on scan for "+str(true_wavelength))
+        plt.title("hwhm max model for losers on scan for "+str(true_wavelength))
         plt.xlabel("Wavelength reading (A)")
         plt.ylabel("CPS")
         plt.errorbar(data[data_below,0], data[data_below,1], yerr = weights[data_below], label = "excluded data", marker = '.', c = 'b', ls='none')
@@ -105,7 +123,148 @@ def hwhm_max_for_losers(data, weights, plot = True, true_wavelength = None):
 
     return w_max, w_err
 
+def check_against_voigt(data, weights, shift, noise_reduced = None, true_wavelength = None, threshold = 1/2):
+    # data is processed data
+    from fitters import fit_to_voigt
+    from models_2 import voigt_models
+
+    data_half = (max(data[:,1]) + min(data[:,1])) * threshold
+    data_above = data[:,1] > data_half
+    data_below = data[:,1] <= data_half
+    cut_wavelengths = data[data_above,0]
+    cut_weights = weights[data_above]
+    
+    hwhm, hwhm_err, averaging_weights = hwhm_max(data, weights, noise_reduced = noise_reduced, plot = False, threshold = threshold, give_weights= True)
+
+    unprocessed = (rp_unprocessed := fit_to_voigt(data, weights), rp2_unprocessed := fit_to_voigt(data, weights, shift = shift))
+    processed = ({}, {})
+    for i, rp_u in enumerate(unprocessed):
+        for name, param in rp_u.items():
+            processed[i][name] = param.value
+    rp, rp2 = processed
+
+    plt.title("Comparison of hwhm_max, two voigt, and voigt models for "+str(true_wavelength))
+    plt.xlabel("Wavelength reading (A)")
+    plt.ylabel("CPS")   
+    # data
+    plt.errorbar(data[data_below,0], data[data_below,1], yerr = weights[data_below], label = "excluded data", marker = '.', c = 'black', ls='none')
+    plt.errorbar(cut_wavelengths, data[data_above,1], yerr = cut_weights, label = "included data", marker = '.', c = 'orange', ls='none')    
+
+    # voigts etc
+    x = np.linspace(min(data[:,0]), max(data[:,0]), 1000)
+    v = voigt_models['voigt_with_shift'][0](x, rp['amp'], rp['mu'], rp['alpha'], rp['gamma'], rp['a'])
+    if shift != 0:
+        v2 = voigt_models['two_voigt'][0](x, rp2['amp'], rp2['mu'], rp2['alpha'], rp2['gamma'], rp2['amp2'], rp2['mu2'], rp2['alpha2'], rp2['gamma2'], rp2['a'])
+    #v21 = 
+    #v22 = 
+    mu = rp['mu']
+    if shift != 0:
+        mu21 = rp2['mu']
+        mu22 = rp2['mu2']
+    
+    plt.plot(x, v, c = 'purple', label = "single voigt fit")
+    plt.axvline(x = mu, c = 'magenta', label = "single voigt estimate", ls = '--')
+    if shift != 0:
+        plt.plot(x, v2, c = 'blue', label = "double voigt fit")
+        plt.axvline(x = mu21, c = 'cyan', label = "double voigt estimates", ls = '--')
+        plt.axvline(x = mu22, c = 'cyan', ls = '--')
+
+    # hwhm estimates
+    plt.plot(cut_wavelengths, averaging_weights * max(data[:,1]) / max(averaging_weights) / 2, label = "scaled averaging weights", c = 'lime')
+    plt.axvline(x = hwhm, c = 'r', ls = '--', label = "hwhm estimate")
+    plt.axvline(x = hwhm + hwhm_err, c = 'orange', ls = '--', label = "hwhm error bounds")
+    plt.axvline(x = hwhm - hwhm_err, c = 'orange', ls = '--')
+
+    plt.legend()
+    plt.show()
+
+def check_against_voigt_pretty(data, weights, shift, noise_reduced = None, true_wavelength = None, threshold = 1/2):
+    # data is processed data
+    from fitters import fit_to_voigt
+    from models_2 import voigt_models
+
+    data_half = (max(data[:,1]) + min(data[:,1])) * threshold
+    data_above = data[:,1] > data_half
+    data_below = data[:,1] <= data_half
+    cut_wavelengths = data[data_above,0]
+    cut_weights = weights[data_above]
+    
+    hwhm, hwhm_err, averaging_weights = hwhm_max(data, weights, noise_reduced = noise_reduced, plot = False, threshold = threshold, give_weights= True)
+
+    unprocessed = (rp_unprocessed := fit_to_voigt(data, weights), rp2_unprocessed := fit_to_voigt(data, weights, shift = shift))
+    processed = ({}, {})
+    for i, rp_u in enumerate(unprocessed):
+        for name, param in rp_u.items():
+            processed[i][name] = param.value
+    rp, rp2 = processed
+
+    # voigts etc
+    x = np.linspace(min(data[:,0]), max(data[:,0]), 1000)
+    v = voigt_models['voigt_with_shift'][0](x, rp['amp'], rp['mu'], rp['alpha'], rp['gamma'], rp['a'])
+    if shift != 0:
+        v2 = voigt_models['two_voigt'][0](x, rp2['amp'], rp2['mu'], rp2['alpha'], rp2['gamma'], rp2['amp2'], rp2['mu2'], rp2['alpha2'], rp2['gamma2'], rp2['a'])
+    #v21 = 
+    #v22 = 
+    mu = rp['mu']
+    if shift != 0:
+        mu21 = rp2['mu']
+        mu22 = rp2['mu2']
+
+    if shift == 0:
+        fig, (ax1, ax2) = plt.subplots(2,1)
+        axes = ax1, ax2
+    else:
+        fig, (ax1, ax2, ax3) = plt.subplots(3,1)
+        axes = ax1, ax2, ax3
+
+    for ax in axes:
+        #ax.set_xlabel("Wavelength reading (A)")
+        ax.set_ylabel("CPS")
+        ax.errorbar(data[data_below,0], data[data_below,1], yerr = weights[data_below], label = "excluded data" if ax == ax1 else None, marker = '.', c = 'black', ls='none')
+        ax.errorbar(cut_wavelengths, data[data_above,1], yerr = cut_weights, label = "included data" if ax == ax1 else None, marker = '.', c = 'orange' if ax == ax1 else 'black', ls='none')    
+        #ax.axvline(x = hwhm + hwhm_err, c = 'red', ls = '--', label = "hwhm error bounds")
+        #ax.axvline(x = hwhm - hwhm_err, c = 'red', ls = '--')
+        ax.get_xaxis().get_major_formatter().set_useOffset(False)
+
+    ax1.set_title("Comparison of hwhm_max, two voigt, and voigt models for "+str(true_wavelength))
+    ax1.axvline(x = hwhm, c = 'red', label = "hwhm estimate", ls = '-')
+    ax1.plot(cut_wavelengths, averaging_weights * max(data[:,1]) / max(averaging_weights) / 2, label = "(scaled) averaging weights", c = 'lime')
+    ax1.axvline(x = hwhm + hwhm_err, c = 'red', ls = '--', label = "hwhm error bounds")
+    ax1.axvline(x = hwhm - hwhm_err, c = 'red', ls = '--')
+
+    ax2.plot(x, v, c = 'cyan', label = "single voigt fit")
+    ax2.axvline(x = mu, c = 'blue', label = "single voigt peak", ls = '--')
+
+    if shift != 0:
+        ax3.plot(x, v2, c = 'magenta', label = "double voigt fit")
+        ax3.axvline(x = mu21, c = 'purple', ls = '--', label = "double voigt peaks")
+        ax3.axvline(x = mu22, c = 'purple', ls = '--')
+
+    axes[-1].set_xlabel("Wavelength reading (A)")
+    for ax in axes:
+        ax.legend(loc = 'upper right')
+
+    plt.show()
+    
+
 def do_the_thing():
+    from data.data_loader import read_data
+    from data_processing import process_data
+    import os
+    interesting = "data/final_data/interesting"
+    
+    for file in os.listdir(interesting):
+        wavelength_name = str(file)
+        fpath = os.path.join(interesting, file)
+        if os.path.isfile(fpath):
+            data = read_data(str(fpath))
+            processed_data, weights, noise_reduced = process_data(data, noise_reduced = True, plot_noise_reduction = True)
+            sshift = input("Estimate splitting (A): ")
+            shift = 0 if sshift == "" else float(sshift)
+            check_against_voigt_pretty(processed_data, weights, shift, noise_reduced = noise_reduced, true_wavelength = wavelength_name)
+
+
+"""def do_the_thing():
     from data.data_loader import read_data
     #file = 'data/DeuteriumScans/SuperFineScans/beta2H'
     #from main_calibration_2 import check_3125_668 as d
@@ -119,6 +278,7 @@ def do_the_thing():
     print (hwhm_max(data, weights, plot = True, true_wavelength = "sodium E H", threshold = 1/3))#, true_wavelength = d['true value']))
     print (hwhm_max(data, weights, noise_reduced, plot = True, true_wavelength = "sodium E H", threshold = 1/3))#, true_wavelength = d['true value']))
     #print (hwhm_max_for_losers(data, weights, plot = True))
+"""
 
 if __name__ == "__main__":
     do_the_thing()
