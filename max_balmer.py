@@ -11,6 +11,8 @@ from calibration import calibrate
 from calibration import calibrate_error
 from data_processing import process_data
 from  max_model import hwhm_max
+import numpy as np
+
 
 # File Path to peak data files
 folder = 'data/final_data/hydrogen/'
@@ -213,6 +215,47 @@ for key in information:
 ref_rydberg = sum/len(information)
 
 print('Reference rydberg: ' + str(ref_rydberg))
+
+
+# Rydberg Model
+rydberg_model = lmfit.Model(models.rydberg_model)
+
+weights = []
+for i in errors:
+    weights.append(1/(i * (1e-10)))
+
+balmer_data = np.zeros(shape=(len(n), 2))
+for i in range(0, len(n)):
+    balmer_data[i, 0] = n[i]
+    balmer_data[i, 1] = wavelengths[i] * (1e-10)
+
+
+result = fit(model=rydberg_model, data= balmer_data, weights=weights)
+
+# Errors rescaled
+errors_m = []
+for i in errors:
+    errors_m.append(i * (1e-8)) # errors times 100
+
+plt.errorbar(balmer_data[:, 0], balmer_data[:, 1], errors_m, fmt='o')
+x=np.linspace(min(balmer_data[:,0]), max(balmer_data[:,0]), 1000)
+y=[]
+for i in x:
+    y.append(models.rydberg_model(i, result.best_values['a']))
+plt.plot(x, y)
+plt.show()
+
+
+print(lmfit.fit_report(result))
+
+balmer_ref_data = np.zeros(shape=(len(n), 2))
+for i in range(0, len(n)):
+    balmer_ref_data[i, 0] = n[i]
+    balmer_ref_data[i, 1] = references[i] * (1e-10)
+
+
+result = fit(model=rydberg_model, data= balmer_ref_data)
+print(lmfit.fit_report(result))
 
 
 
