@@ -190,6 +190,7 @@ for key in information:
 #plt.errorbar(n, wavelengths, errors, fmt='o')
 #plt.errorbar(n, references, fmt='o')
 plt.errorbar(n, residuals,errors, fmt='o')
+plt.axhline(y = 0, c = 'r', ls = '--')
 plt.xlabel('initial n')
 plt.ylabel('(measured wavelength - reference value) (A)')
 plt.show()
