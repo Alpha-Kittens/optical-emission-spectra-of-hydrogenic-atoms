@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def process_data(data, damping_constant = None, plot_noise_reduction = False, title=None):
+def process_data(data, damping_constant = None, plot_noise_reduction = False, noise_reduced = False, title = None):
     """
     processes data after being intially read from the data file
         1. reduces noise in data and obtains weights
@@ -55,9 +55,13 @@ def process_data(data, damping_constant = None, plot_noise_reduction = False, ti
     i = np.array(range(len(data[:,1])))
 
     #return np.logical_and(i >= max_signal[0], i <= max_signal[1]) old return statement
-    new_data = data[max_signal[0]:max_signal[1],:]
-    new_weights = weights[max_signal[0]:max_signal[1]]
-    return new_data, new_weights
+    processed_data = data[max_signal[0]:max_signal[1],:]
+    processed_weights = weights[max_signal[0]:max_signal[1]]
+    if noise_reduced:
+        processed_noise = new_data[max_signal[0]:max_signal[1],:]
+        return processed_data, processed_weights, processed_noise
+    else:
+        return processed_data, processed_weights
 
 
 def regions(cps, reduce = True):

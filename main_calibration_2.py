@@ -120,6 +120,7 @@ check_3131_548 = {
     "true value" : 3131.548,
     "splitting" : 0.3,
     "damping" : 0.1,    
+    "threshold" : 1/2,
 }
 check_3654_836 = {
     "fp" : folder_check + "3654_836",
@@ -132,7 +133,7 @@ check_4311_65 = {
     "fp" : folder_check + "4311_65",
     "true value" : 4311.65,
     "splitting" : 0.075,
-    "damping" : 0.1,    
+    "damping" : 0.1,  
 }
 # also, also a little bit sus
 check_4347_494 = {
@@ -174,7 +175,6 @@ check_6149_475 = {
 
 #check_peaks = [check_3125_668, check_3131_548, check_3654_836, check_4311_65, check_4347_494, check_4358_328, check_5425_253, check_5677_105, check_6149_475]
 check_peaks = [check_3125_668, check_3131_548, check_3654_836, check_4311_65, check_4347_494, check_4358_328, check_5677_105]
-sus_peaks = [check_3131_548, check_4311_65, check_4358_328, check_5677_105, check_3125_668]
 #sus_peaks = [check_3131_548, check_4347_494]
 maxmodel_peaks = [check_5425_253, check_6149_475]
 '''
@@ -256,15 +256,15 @@ def do_calibration(measured, true, weights, n_poly, include_exp, plot = True, ch
 
     model = lmfit.Model(c_model)
     result = model.fit(true, params=params, x=measured, weights=weights)
-    print (lmfit.fit_report(result))
-    c_params, c_errs = extract(result)
+    #print (lmfit.fit_report(result))
+    c_params, c_errs = extract(result.params)
 
     title = "Calibration model: degree-"+str(n_poly)+" polynomial"
     if include_exp:
         title += " plus exponential"
     print (title)
-    print ("Chi square: "+result.chisqr)
-    print ("Reudced: "+result.redchi)
+    print ("Chi square: "+str(result.chisqr))
+    print ("Reduced: "+str(result.redchi))
     if plot:
         plt.title(title)
         plt.xlabel("Monochrometer reading (A)")
@@ -277,18 +277,52 @@ def do_calibration(measured, true, weights, n_poly, include_exp, plot = True, ch
             xmax = max(xmax, max(check[0]))
             plt.errorbar(x = check[0], y = check[1], xerr = check[2], marker = '.', ls = 'none', label = "H data", c = 'magenta')
         x = np.linspace(xmin - 100, xmax + 100, 1000)
-        plt.plot(x, c_model(x, c_params), label = "Calibration curve", c = 'r')
-        plt.text(xmin + 100, 5000, "Chi square: str(result.chisqr)")
-        plt.text(xmin + 100, 4800, "Reduced: str(result.redchi)")
+        plt.plot(x, c_model(x, **c_params), label = "Calibration curve", c = 'r')
+        plt.text(xmin + 100, 5500, "Chi square: "+str(result.chisqr))
+        plt.text(xmin + 100, 5300, "Reduced: "+str(result.redchi))
         plt.legend()
         plt.show()
-    return c_params, c_errs
+        plt.title(title)
+        plt.xlabel("Monochrometer reading (A)")
+        plt.ylabel("Residual (A)")
+        plt.errorbar(x = measured, y = c_model(np.array(measured), **c_params) - np.array(true), yerr = 1/weights, marker = '.', ls = 'none', label = "Calibration data", c = 'b')
+        xmin = min(measured)
+        xmax = max(measured)
+        if check != []:
+            xmin = min(xmin, min(check[0]))
+            xmax = max(xmax, max(check[0]))
+            plt.errorbar(x = check[0], y = c_model(np.array(check[0]), **c_params) - np.array(check[1]), yerr = check[2], marker = '.', ls = 'none', label = "H data", c = 'magenta')
+        x = np.linspace(xmin - 100, xmax + 100, 1000)
+        #plt.plot(x, c_model(x, **c_params), label = "Calibration curve", c = 'r')
+        plt.axhline(y=0, c = 'r', label = "Calibration curve", linestyle  = '--')
+        plt.text(xmin + 100, 5500, "Chi square: "+str(result.chisqr))
+        plt.text(xmin + 100, 5300, "Reduced: "+str(result.redchi))
+        plt.legend()
+        plt.show()
+    return c_params, c_errs, result.chisqr, result.redchi
+
+def cwrite(file, key, mean, params, errs):
+    # in retrospect, I could have just made the calibration models detect which model is used based on parameter names. But oh well. 
+    with open(file, 'w') as f:
+        f.write("from calibration_models import *\n")
+        f.write("from numpy import sqrt, abs\n")
+        f.write("params = " + str(params) + "\n")
+        f.write("errors = " + str(errs) + "\n")
+        if key[1] == 1:
+            f.write("calibrate = lambda x : model_both("+str(mean)+")(x, **params)\n")
+            f.write("calibrate_error = lambda x, x_err : model_both_err("+str(mean)+", params, errors)(x, x_err)\n")
+        else:
+            f.write("calibrate = lambda x : model_poly("+str(mean)+")(x, **params)\n")
+            f.write("calibrate_error = lambda x, x_err : model_poly_err("+str(mean)+", params, errors)(x, x_err)\n")
+        f.write("calibrate_splitting = lambda x1, x2 : calibrate(x2) - calibrate(x1)\n")
+        f.write("calibrate_splitting_error = lambda x1, x2, x1_err, x2_err : (sqrt(calibrate_error(x1, x1_err)[0]**2 + calibrate_error(x2, x2_err)[0]**2), abs(calibrate_error(x1, x1_err)[1] - calibrate_error(x2, x2_err)[1]))\n")
+
+            
 
 if __name__ == '__main__':
 
-    enter_splittings = False
-    check_fits = True
-
+    check_fits = False
+    sus_peaks = [check_4311_65, check_5677_105]
 
     for wavelength in main_peaks + check_peaks + H:
 
@@ -296,52 +330,88 @@ if __name__ == '__main__':
 
             #plt.plot(entry[:,0], entry[:,1])
             #plt.show()
-
             #Made some changes, if you think this is worse, you can revert though this might mean we should modify process_data to make it more appropriate -Athira
-            processed_data,weights = process_data(entry, plot_noise_reduction=enter_splittings)  #Added by Athira, plot set to true so can answer shift questions
+            processed_data,weights, noise_reduced = process_data(entry, plot_noise_reduction=False, noise_reduced = True)  #Added by Athira, plot set to true so can answer shift questions
             #new_data, weights = reduce_noise(entry)        --commented out by Athira, to implement process_data
             #if enter_splittings or splittings[key][i] is None:
             
             # execute hwhm
             if wavelength not in H:
-                mu, mu_err = hwhm_max(processed_data, weights, plot = check_fits, true_wavelength = wavelength['true value'])
-                measured['reference'].append(mu)
-                error['reference'].append(mu_err)
+                if wavelength not in sus_peaks:
+                    if 'threshold' in wavelength.keys():
+                        threshold = wavelength['threshold']
+                    else:
+                        threshold = 1/3
+                    mu, mu_err = hwhm_max(processed_data, weights, plot = check_fits, noise_reduced = noise_reduced, true_wavelength = wavelength['true value'], threshold = threshold)
+                    measured['reference'].append(mu)
+                    error['reference'].append(mu_err)
             else:
-                mu, mu_err = hwhm_max(processed_data, weights, plot = check_fits, true_wavelength = wavelength['true value'])
-                measured['check'].append(mu)
-                error['check'].append(mu_err)
+                if wavelength not in sus_peaks:
+                    mu, mu_err = hwhm_max(processed_data, weights, plot = check_fits, noise_reduced = noise_reduced, true_wavelength = wavelength['true value'], threshold = 1/3)
+                    measured['check'].append(mu)
+                    error['check'].append(mu_err)
 
     print("Summary:")
     print ("Reference (Hg) peaks:")
     true_wavelengths = []
+    offset = 0
     for i, wavelength in enumerate(main_peaks + check_peaks):
-        true_wavelengths.append(wavelength['true value'])
-        print ("True value: " + str(wavelength['true value']))
-        print ("Estimated peak: " + str(measured['reference'][i]))
-        print ("Uncertainty: " + str(error['reference'][i]))
-        print ("---")
+        if wavelength not in sus_peaks:
+            true_wavelengths.append(wavelength['true value'])
+            print ("True value: " + str(wavelength['true value']))
+            print ("Estimated peak: " + str(measured['reference'][i - offset]))
+            print ("Uncertainty: " + str(error['reference'][i - offset]))
+            print ("---")
+        else:
+            offset += 1
     print ("Check (H) peaks:")
     true_H_wavelengths = []
+    offset = 0
     for i, wavelength in enumerate(H):
-        true_H_wavelengths.append(wavelength['true value'])
-        print ("True value: " + str(wavelength['true value']))
-        print ("Estimated peak: " + str(measured['check'][i]))
-        print ("Uncertainty: " + str(error['check'][i]))
-        print ("---")    
+        if wavelength not in sus_peaks:
+            true_H_wavelengths.append(wavelength['true value'])
+            print ("True value: " + str(wavelength['true value']))
+            print ("Estimated peak: " + str(measured['check'][i - offset]))
+            print ("Uncertainty: " + str(error['check'][i - offset]))
+            print ("---")    
+        else:
+            offset += 1
 
     mean = np.mean(measured['reference'])
-    weights = 1/np.array(measured['errors'])
+    weights = 1/np.array(error['reference'])
 
     check = (measured["check"], true_H_wavelengths, error['check'])
+
+    x = np.linspace(min(min(measured['reference']),min(measured['check'])), max(max(measured['reference']),max(measured['check'])), 1000)
 
     results = {}
     for include_exp in (False, True):
         ekey = 1 if include_exp else 0
         for degree in range(1, 7):
-            results[(ekey, degree)] = do_calibration(measured['reference'], true_wavelengths, weights, degree, include_exp, check = check)
-    
+            results[(ekey, degree)] = do_calibration(measured['reference'], true_wavelengths, weights, degree, include_exp, check = check, plot = False)
+            params, errs, chisqr, redchi = results[(ekey, degree)] 
+            #plt.plot(x, model_poly(mean)(x, results[(ekey, degree)]), label = "calibration curve", c = 'r')
+            #plt.errorbar(measured['reference'], true_wavelengths, xerr = )
 
+    minchi = 10
+    mindetails = None
+    for details, result in results.items():
+        if result[3] < minchi:
+            minchi = result[3]
+            mindetails = details
+    print (minchi)
+    print (mindetails)
+
+    winner = (0,3)
+    slope = results[winner][0]['b']
+    print (slope)
+    params, errs, chisqr, redchi = do_calibration(measured['reference'], true_wavelengths, weights * slope, winner[1], winner[0] == 1, check = check, plot = True)
+    cwrite("calibration_test.py", winner, mean, params, errs)
+    #cwrite("calibration.py", winner, mean, results[winner][0], results[winner][1])
+
+
+
+        
     #winner selection
 
     #file writing
