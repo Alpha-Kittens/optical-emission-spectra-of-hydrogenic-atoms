@@ -69,7 +69,10 @@ damping_constants = {
 }
 
 # Run fits for each wavelength in information
+#for key in ['alpha']:
 for key in information:
+    print ("=======")
+    print (key)
 
     wavelength = information[key]
 
@@ -78,13 +81,12 @@ for key in information:
 
     processed_data,weights, noise_reduced = process_data(data, plot_noise_reduction=True, noise_reduced=True)
 
-    uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, noise_reduced=noise_reduced, plot=True)
+    uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, noise_reduced=noise_reduced, plot=True, threshold = 1/3)
 
-
+    print ("true: "+str(wavelength['reference']))
     # Calibration to convert the wavelengths
     true_wavelength = calibrate(uncalibrated_wavelength)
-    true_uncertainty_stat = calibrate_error(uncalibrated_wavelength,uncalibrated_uncertainty)[0]
-    true_uncertainty_sys = calibrate_error(uncalibrated_wavelength,uncalibrated_uncertainty)[1]
+    true_uncertainty_stat, true_uncertainty_sys = calibrate_error(uncalibrated_wavelength,uncalibrated_uncertainty)
 
     wavelength["wavelength"] = true_wavelength
     wavelength["wavelength_unc_sys"] = true_uncertainty_sys
