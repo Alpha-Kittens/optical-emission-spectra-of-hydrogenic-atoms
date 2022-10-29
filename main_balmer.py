@@ -68,15 +68,15 @@ for key in information:
     # Read data
     data = data_loader.read_data(wavelength["fp"])
 
-    processed_data,weights = process_data(data, plot_noise_reduction=True)
+    processed_data,weights = process_data(data, plot_noise_reduction=True, title=key)
 
     result_params  = fit_to_voigt(processed_data, weights, plot=True)
 
     wavelength["params"] = result_params
 
     # Calibration to convert the wavelengths
-    true_wavelength = calibrate(wavelength["params"]['mu'].value)
-    true_uncertainty = calibrate_error(wavelength["params"]['mu'].value,wavelength["params"]['mu'].stderr)
+    true_wavelength = calibration(wavelength["params"]['mu'].value)
+    true_uncertainty = calibration_error(wavelength["params"]['mu'].value,wavelength["params"]['mu'].stderr)
   
     wavelength["wavelength"] = true_wavelength
     wavelength["wavelength_unc"] = true_uncertainty

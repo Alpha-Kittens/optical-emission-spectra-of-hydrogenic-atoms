@@ -5,7 +5,7 @@ from data.data_loader import read_data
 from data_processing import get_cutoff,get_regions,regions
 from fitters import primary_signal_region
 
-def reduce_noise (data, damping_constant = 1/10, plot = False):
+def reduce_noise (data, damping_constant = 1/10, plot = False, title=None):
     """
     Given data, uses a fourier bandpass filter to reduce noise and estimate uncertainty of each counts per second measurement. 
     
@@ -41,8 +41,15 @@ def reduce_noise (data, damping_constant = 1/10, plot = False):
         psr = primary_signal_region(np.abs(data))
         #plt.scatter(x[psr], y[psr], marker = '.')
         #plt.plot(x[psr], new_data[psr])
-        plt.scatter(x, y, marker = '.', c = 'b')
-        plt.plot(x, new_data, c = 'r')
+        #plt.scatter(x, y, marker = '.', c = 'b')
+        plt.scatter(x, y, marker = '.', label="raw data")
+        #plt.plot(x, new_data, c = 'r')
+        plt.plot(x, new_data, c = 'red', label="noise reduced")
+        plt.xlabel('Uncalibrated Angstroms')
+        plt.ylabel('Counts per second')        
+        plt.legend()
+        if title is not None:
+            plt.title(title)
         plt.show()
 
     # Make a nx2 numpy to return

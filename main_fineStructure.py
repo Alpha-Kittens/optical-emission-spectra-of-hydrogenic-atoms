@@ -84,7 +84,7 @@ for key in information:
         data = data_loader.read_data(wavelength["fp_" + str(i)])
 
         #Process data
-        processed_data, weights = process_data(data, plot_noise_reduction=True)
+        processed_data, weights = process_data(data, plot_noise_reduction=True, title=key)
 
 
         #Fitting

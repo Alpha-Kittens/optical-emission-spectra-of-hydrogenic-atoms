@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def process_data(data, damping_constant = None, plot_noise_reduction = False):
+def process_data(data, damping_constant = None, plot_noise_reduction = False, title=None):
     """
     processes data after being intially read from the data file
         1. reduces noise in data and obtains weights
@@ -30,12 +30,17 @@ def process_data(data, damping_constant = None, plot_noise_reduction = False):
     if damping_constant is None and plot_noise_reduction == False:
         new_data, weights = reduce_noise(data)
     elif damping_constant is None:
-        new_data, weights = reduce_noise(data, plot=True)
+        if title is None:
+            new_data, weights = reduce_noise(data, plot=True)
+        else:
+            new_data, weights = reduce_noise(data, plot=True, title=title)
     elif plot_noise_reduction == False:
         new_data, weights = reduce_noise(data)
     else:
-        new_data, weights = reduce_noise(data, plot = True)
-
+        if title is None:
+            new_data, weights = reduce_noise(data, plot=True)
+        else:
+            new_data, weights = reduce_noise(data, plot=True, title=title)
 
     backgrounds, signals = regions(data[:,1])
 
