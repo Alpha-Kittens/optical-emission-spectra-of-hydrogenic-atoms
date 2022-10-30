@@ -267,7 +267,7 @@ def do_calibration(measured, true, weights, n_poly, include_exp, plot = True, ch
     print ("Reduced: "+str(result.redchi))
     if plot:
         plt.title(title)
-        plt.xlabel("Monochrometer reading (A)")
+        plt.xlabel("Monochrometer reading (Ã)")
         plt.ylabel("True wavelength (A)")
         plt.errorbar(x = measured, y = true, xerr = 1/weights, marker = '.', ls = 'none', label = "Calibration data", c = 'b')
         xmin = min(measured)
@@ -283,7 +283,7 @@ def do_calibration(measured, true, weights, n_poly, include_exp, plot = True, ch
         plt.legend()
         plt.show()
         plt.title(title)
-        plt.xlabel("Monochrometer reading (A)")
+        plt.xlabel("Monochrometer reading (Ã)")
         plt.ylabel("Residual (A)")
         plt.errorbar(x = measured, y = c_model(np.array(measured), **c_params) - np.array(true), yerr = 1/weights, marker = '.', ls = 'none', label = "Calibration data", c = 'b')
         xmin = min(measured)
@@ -388,7 +388,7 @@ if __name__ == '__main__':
     for include_exp in (False, True):
         ekey = 1 if include_exp else 0
         for degree in range(1, 7):
-            results[(ekey, degree)] = do_calibration(measured['reference'], true_wavelengths, weights, degree, include_exp, check = check, plot = False)
+            results[(ekey, degree)] = do_calibration(measured['reference'], true_wavelengths, weights, degree, include_exp, check = check, plot = True)
             params, errs, chisqr, redchi = results[(ekey, degree)] 
             #plt.plot(x, model_poly(mean)(x, results[(ekey, degree)]), label = "calibration curve", c = 'r')
             #plt.errorbar(measured['reference'], true_wavelengths, xerr = )

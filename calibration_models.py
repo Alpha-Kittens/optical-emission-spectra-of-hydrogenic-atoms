@@ -26,7 +26,7 @@ def poly_err(x, x_err, x_0, params, errs):
     coeffs = sorted(params.keys())
     stat2 = 0
     sys2 = 0
-    print ("========")
+    #print ("========")
     for i, c in enumerate(coeffs):
         if c in poly_coeffs:
             # error in c_i x**i is ((cerr/c)^2 + (i*xerr/x)^2)^(1/2) *c_i x**i
@@ -34,6 +34,7 @@ def poly_err(x, x_err, x_0, params, errs):
             #e2 += (params[c]*(x-x_0)**i)**2 * ((errs[c]/c)**2 + (i*x_err/(x-x_0))**2)
             sys2 += (params[c]*(x-x_0)**i)**2 * ((errs[c]/params[c])**2)
             stat2 += (params[c]*(x-x_0)**i)**2 * (i*x_err/(x-x_0))**2
+            """
             print ("--")
             print ("x-x0: "+str(x-x_0))
             print ("coeff: "+c)
@@ -43,7 +44,8 @@ def poly_err(x, x_err, x_0, params, errs):
             print ("stat: "+str(np.sqrt((params[c]*(x-x_0)**i)**2 * (i*x_err/(x-x_0))**2)))
             print ("sys: "+str(np.sqrt((params[c]*(x-x_0)**i)**2 * ((errs[c]/params[c])**2))))
             print ("--")
-    print ("========")
+            """
+    #print ("========")
     return np.sqrt(stat2), np.sqrt(sys2)
 
 def exp(x, x_0, **params):

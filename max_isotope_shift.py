@@ -53,9 +53,11 @@ information = {
     'alpha' : alpha,
     'beta' : beta,
     'gamma' : gamma,
-#    'delta' : delta,
+    #'delta' : delta,
 }
 
+dont = ['beta']
+plot = False
 
 for key in information:
     wavelength = information[key]
@@ -72,12 +74,12 @@ for key in information:
     data_H = data_loader.read_data(wavelength["fp_H"])
 
     #Deuterium
-    processed_data_D, weights_D, noise_reduced_D = process_data(data_D, plot_noise_reduction=True, noise_reduced=True)
-    uncalibrated_wavelength_D, uncalibrated_uncertainty_D = hwhm_max(processed_data_D, weights_D, noise_reduced= noise_reduced_D, plot=True)
+    processed_data_D, weights_D, noise_reduced_D = process_data(data_D, plot_noise_reduction=plot, noise_reduced=True, slice = key not in dont)
+    uncalibrated_wavelength_D, uncalibrated_uncertainty_D = hwhm_max(processed_data_D, weights_D, noise_reduced= noise_reduced_D, plot=plot, true_wavelength="Deuterium " + key, threshold = 1/2)
 
     #Hydrogen
-    processed_data_H, weights_H, noise_reduced_H = process_data(data_H, plot_noise_reduction=True, noise_reduced=True)
-    uncalibrated_wavelength_H, uncalibrated_uncertainty_H = hwhm_max(processed_data_H, weights_H, noise_reduced= noise_reduced_H, plot=True)
+    processed_data_H, weights_H, noise_reduced_H = process_data(data_H, plot_noise_reduction=plot, noise_reduced=True, slice = key not in dont)
+    uncalibrated_wavelength_H, uncalibrated_uncertainty_H = hwhm_max(processed_data_H, weights_H, noise_reduced= noise_reduced_H, plot=plot, true_wavelength="Hydrogen " + key, threshold = 1/2)
 
 
     # Calibration
@@ -106,6 +108,8 @@ for key in information:
     wavelength['ratio_error_tot'] = math.sqrt(wavelength["ratio_error_stat"]**2 + wavelength["ratio_error_sys"]**2)
 
     print("ratio: " + str(wavelength['ratio']))
+    print("statistical error: " + str(wavelength['ratio_error_stat']))
+    print("systematic error: " + str(wavelength['ratio_error_sys']))
 
 
 # Mean (Weighted Average)
