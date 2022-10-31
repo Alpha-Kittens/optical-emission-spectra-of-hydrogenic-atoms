@@ -23,6 +23,7 @@ def poly(x, x_0, **params):
     return p
 
 def poly_err(x, x_err, x_0, params, errs):
+    #print (x, x_err)
     coeffs = sorted(params.keys())
     stat2 = 0
     sys2 = 0

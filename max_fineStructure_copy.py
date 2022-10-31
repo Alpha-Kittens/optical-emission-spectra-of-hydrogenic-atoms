@@ -96,6 +96,7 @@ slicent_peaks = [d]
 
 
 for key in information:
+    print ("=============")
 
     wavelength = information[key]
     wavelength["fp_1"] = folder + key + "L"
@@ -103,6 +104,7 @@ for key in information:
 
 
     energies = [[0,0], [0,0]]
+    werr = [0,0]
     for i in range(1, 3):
 
     #for i in [2]:
@@ -114,29 +116,43 @@ for key in information:
 
         # Obtain wavelength and error from max model
         uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, plot=False, noise_reduced=noise_reduced)
+        print ("uncalibrated: "+str(uncalibrated_wavelength))
 
         # Calibration
         wavelength["unc_wavelength_" + str(i)] = uncalibrated_wavelength
         wavelength["unc_uncertainty_" + str(i)] = uncalibrated_uncertainty
+        werr[i-1] = uncalibrated_uncertainty
 
+
+        unc = calibrate_error(uncalibrated_wavelength, uncalibrated_uncertainty)
         wavelength["wavelength_" + str(i)] = calibrate(uncalibrated_wavelength)
-        wavelength["stat_uncertainty_" + str(i)] = calibrate_error(uncalibrated_wavelength, uncalibrated_uncertainty)[0]
-        wavelength["stat_uncertainty_" + str(i)] = calibrate_error(uncalibrated_wavelength, uncalibrated_uncertainty)[1]
+        wavelength["stat_uncertainty_" + str(i)], wavelength["sys_uncertainty_" + str(i)] = unc
+
+
+        
     
 
         energies[0][i-1] = en(calibrate(uncalibrated_wavelength))
+        print ("energy: "+str(energies[0][i-1]))
         energies[1][i-1] = [en_err(calibrate(uncalibrated_wavelength), calibrate_error(uncalibrated_wavelength, uncalibrated_uncertainty)[j]) for j in range(2)]
-    print (energies)
     
-    e_split = energies[1][1][0] - energies[1][0][0]
+    print ("===")
+    
+    print (energies)
+
+    #print (unc[0])
+    print (calibrate_splitting_error(wavelength["wavelength_2"], wavelength["wavelength_1"], werr[1], werr[0]))
+    #print (energies[1])
+    e_split = energies[0][0] - energies[0][1]
     e_err = np.sqrt(energies[1][1][0]**2 + energies[1][0][0]**2), abs(energies[1][1][1] - energies[1][1][0])
     e_err_tot = np.sqrt(e_err[0]**2+e_err[1]**2)
 
     wavelength["e"] = e_split
     wavelength["e_err"] = e_err
     wavelength["e_err_tot"] = e_err_tot
+    wavelength["e_err_sys"] = e_err[1]
 
-    print ("===")
+    print ("results:")
     print (e_split)
     print (e_err)
     print (e_err_tot)
@@ -169,16 +185,24 @@ wavelengths = []
 splittings = []
 errors = []
 n = []
+syserrors = []
 
 for key in information:
     wavelength = information[key]
     wavelengths.append(wavelength["wavelength_1"])
     splittings.append(wavelength["e"])
     errors.append(wavelength["e_err_tot"])
+    syserrors.append(wavelength["e_err_sys"])
     n.append(wavelength['n'])
 
-plt.xlabel("~Wavelength (A)")
-plt.ylabel("Energy splitting (A)")
+true = en(5889.950) - en(5895.924)
 
-plt.errorbar(wavelengths, splittings, errors, fmt='o')
+plt.title("Measurements of 3P fine structure splitting of sodium")
+plt.xlabel("~Monochromator reading of doublet (Ã)")
+plt.ylabel("Energy splitting (eV)")
+plt.axhline(y = true, c = 'r', label = "True value: %6f eV" % true, ls = '--')
+plt.errorbar(wavelengths, splittings, errors, fmt='o', color = 'blue', label = "Total uncertainties")
+plt.errorbar(wavelengths, splittings, syserrors, fmt = 'o', label = "Systematic uncertainties", color = 'orange')
+plt.text(4500, 0.00195, "Average value: (%.6f ± " % weighted_average + "%6f) eV" % weighted_uncertainty, fontsize = 18)
+plt.legend(loc = "upper left")
 plt.show()

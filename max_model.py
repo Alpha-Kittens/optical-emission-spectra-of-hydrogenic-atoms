@@ -198,11 +198,12 @@ def do_the_thing():
     from data.data_loader import read_data
     from data_processing import process_data
     import os
-    interesting = "data/final_data/interesting"
-    
+    #interesting = "data/final_data/interesting"
+    interesting = "data/final_data/mercury/check"
     for file in os.listdir(interesting):
         wavelength_name = str(file)
         fpath = os.path.join(interesting, file)
+        #print (fpath)
         if os.path.isfile(fpath):
             data = read_data(str(fpath))
             processed_data, weights, noise_reduced = process_data(data, noise_reduced = True, plot_noise_reduction = True)

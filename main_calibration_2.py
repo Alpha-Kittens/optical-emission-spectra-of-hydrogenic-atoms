@@ -321,7 +321,7 @@ def cwrite(file, key, mean, params, errs):
 
 if __name__ == '__main__':
 
-    check_fits = False
+    check_fits = True
     sus_peaks = [check_4311_65, check_5677_105]
 
     for wavelength in main_peaks + check_peaks + H:
@@ -388,7 +388,7 @@ if __name__ == '__main__':
     for include_exp in (False, True):
         ekey = 1 if include_exp else 0
         for degree in range(1, 7):
-            results[(ekey, degree)] = do_calibration(measured['reference'], true_wavelengths, weights, degree, include_exp, check = check, plot = True)
+            results[(ekey, degree)] = do_calibration(measured['reference'], true_wavelengths, weights, degree, include_exp, check = check, plot = False)
             params, errs, chisqr, redchi = results[(ekey, degree)] 
             #plt.plot(x, model_poly(mean)(x, results[(ekey, degree)]), label = "calibration curve", c = 'r')
             #plt.errorbar(measured['reference'], true_wavelengths, xerr = )
@@ -405,7 +405,11 @@ if __name__ == '__main__':
     winner = (0,3)
     slope = results[winner][0]['b']
     print (slope)
-    params, errs, chisqr, redchi = do_calibration(measured['reference'], true_wavelengths, weights * slope, winner[1], winner[0] == 1, check = check, plot = True)
+    print (results[winner][0])
+    print (results[winner][1])
+    params, errs, chisqr, redchi = do_calibration(measured['reference'], true_wavelengths, slope * weights, winner[1], winner[0] == 1, check = check, plot = False)
+    print (params)
+    print (errs)
     cwrite("calibration_test.py", winner, mean, params, errs)
     #cwrite("calibration.py", winner, mean, results[winner][0], results[winner][1])
 
