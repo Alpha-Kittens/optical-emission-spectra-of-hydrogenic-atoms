@@ -8,7 +8,7 @@ import models_2 as models
 import noise_reduction
 import math
 from fitters import fit_to_voigt
-from calibration import calibration, calibration_error
+from calibration import calibrate, calibrate_error
 from data_processing import process_data
 
 
@@ -75,10 +75,10 @@ for key in information:
     result_params  = fit_to_voigt(processed_data, weights, shift, plot=True)
 
     # Calculating the Shift
-    wavelength["deuterium"] = calibration(result_params["mu"].value)
+    wavelength["deuterium"] = calibrate(result_params["mu"].value)
     wavelength["shift"] = wavelength["hydrogen"] - wavelength["deuterium"]
 
-    wavelength["shift_error"] = calibration_error(result_params["mu"].value, result_params["mu"].stderr)
+    wavelength["shift_error"] = calibrate_error(result_params["mu"].value, result_params["mu"].stderr)[0]
 
     print("Shift error pre-calibration: " + str(result_params["mu"].stderr))
     print("Shift error " + str(wavelength["shift_error"]))

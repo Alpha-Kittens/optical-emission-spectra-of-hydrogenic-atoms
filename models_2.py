@@ -178,15 +178,18 @@ def get_voigt_params(data, return_max = False):
 
     if maxes == []:
         start_alpha = (max(data[:,0]) - min(data[:,0])) / 4
-        start_gamma = start_alpha
+        start_gamma = start_alpha / 10
     else:
         max_signal = signals[np.argmax(maxes)]
         start_alpha = (wavelengths[max_signal[1]] - wavelengths[max_signal[0]]) / 4
-        start_gamma = start_alpha
+        #start_gamma = start_alpha
+        start_gamma=start_alpha /10 #Since we expect line width to be small compared to doppler broadening
     arg_max = np.argmax(cps)
     start_mu = wavelengths[arg_max]
     #print (cps[arg_max])
     start_amp =  cps[arg_max] / voigt(data[arg_max,0], 1, start_mu, start_alpha, start_gamma) - min(cps)
+
+
     #print (start_mu)
     #print (start_amp)
     #print (start_alpha)

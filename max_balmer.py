@@ -83,7 +83,7 @@ for key in information:
 
     processed_data,weights, noise_reduced = process_data(data, plot_noise_reduction=True, noise_reduced=True)
 
-    uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, noise_reduced=noise_reduced, plot=True, threshold = 1/3)
+    uncalibrated_wavelength, uncalibrated_uncertainty = hwhm_max(processed_data, weights, noise_reduced=noise_reduced, plot=True, threshold = 1/3, true_wavelength="Hydrogen " + key + " Line: " + str(wavelength["reference"]) + " A")
 
     print ("true: "+str(wavelength['reference']))
     # Calibration to convert the wavelengths
@@ -144,7 +144,6 @@ for key in information:
     '''
 
 
-
 # Weighted Average
 numerator = 0
 denominator = 0
@@ -156,8 +155,23 @@ for key in information:
 mean = numerator/denominator
 print(mean)
 
-uncertainty = 1/math.sqrt(denominator)
+uncertainty_tot = 1/math.sqrt(denominator)
 
+
+denominator_sys = 0
+denominator_stat = 0
+for key in information:
+    wavelength = information[key]
+    denominator_sys += 1/((wavelength["R_H_unc_sys"])**2)
+    denominator_stat += 1/((wavelength["R_H_unc_stat"])**2)
+
+uncertainty_sys = 1/math.sqrt(denominator_sys)
+uncertainty_stat = 1/math.sqrt(denominator_stat)
+
+print(1/math.sqrt(1/(uncertainty_sys**2) + 1(uncertainty_stat**2)))
+
+
+'''
 #Standard Deviation
 sum = 0
 for key in information:
@@ -166,17 +180,19 @@ for key in information:
 std_dev = math.sqrt(sum/(len(information)))
 
 std_error = std_dev/math.sqrt(len(information))
+'''
+
 
 results = {
     "mean" : mean,
-    "uncertainty" : uncertainty,
-    "standard deviation": std_dev,
-    "standard error" : std_error
+    "uncertainty" : uncertainty_tot,
+    "statistical uncertainty": uncertainty_stat,
+    "systematic uncertainty" : uncertainty_sys
 }
 
 print(results)
 
-
+'''
 #Make a plot
 n = []
 wavelengths = []
@@ -259,5 +275,5 @@ print(lmfit.fit_report(result))
 
 
 
-
+'''
 # Write to a file (to be read by isotope shift)

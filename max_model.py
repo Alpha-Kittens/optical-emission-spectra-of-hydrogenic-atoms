@@ -123,60 +123,7 @@ def hwhm_max_for_losers(data, weights, plot = True, true_wavelength = None):
 
     return w_max, w_err
 
-def check_against_voigt(data, weights, shift, noise_reduced = None, true_wavelength = None, threshold = 1/2):
-    # data is processed data
-    from fitters import fit_to_voigt
-    from models_2 import voigt_models
 
-    data_half = (max(data[:,1]) + min(data[:,1])) * threshold
-    data_above = data[:,1] > data_half
-    data_below = data[:,1] <= data_half
-    cut_wavelengths = data[data_above,0]
-    cut_weights = weights[data_above]
-    
-    hwhm, hwhm_err, averaging_weights = hwhm_max(data, weights, noise_reduced = noise_reduced, plot = False, threshold = threshold, give_weights= True)
-
-    unprocessed = (rp_unprocessed := fit_to_voigt(data, weights), rp2_unprocessed := fit_to_voigt(data, weights, shift = shift))
-    processed = ({}, {})
-    for i, rp_u in enumerate(unprocessed):
-        for name, param in rp_u.items():
-            processed[i][name] = param.value
-    rp, rp2 = processed
-
-    plt.title("Comparison of hwhm_max, two voigt, and voigt models for "+str(true_wavelength))
-    plt.xlabel("Wavelength reading (A)")
-    plt.ylabel("CPS")   
-    # data
-    plt.errorbar(data[data_below,0], data[data_below,1], yerr = weights[data_below], label = "excluded data", marker = '.', c = 'black', ls='none')
-    plt.errorbar(cut_wavelengths, data[data_above,1], yerr = cut_weights, label = "included data", marker = '.', c = 'orange', ls='none')    
-
-    # voigts etc
-    x = np.linspace(min(data[:,0]), max(data[:,0]), 1000)
-    v = voigt_models['voigt_with_shift'][0](x, rp['amp'], rp['mu'], rp['alpha'], rp['gamma'], rp['a'])
-    if shift != 0:
-        v2 = voigt_models['two_voigt'][0](x, rp2['amp'], rp2['mu'], rp2['alpha'], rp2['gamma'], rp2['amp2'], rp2['mu2'], rp2['alpha2'], rp2['gamma2'], rp2['a'])
-    #v21 = 
-    #v22 = 
-    mu = rp['mu']
-    if shift != 0:
-        mu21 = rp2['mu']
-        mu22 = rp2['mu2']
-    
-    plt.plot(x, v, c = 'purple', label = "single voigt fit")
-    plt.axvline(x = mu, c = 'magenta', label = "single voigt estimate", ls = '--')
-    if shift != 0:
-        plt.plot(x, v2, c = 'blue', label = "double voigt fit")
-        plt.axvline(x = mu21, c = 'cyan', label = "double voigt estimates", ls = '--')
-        plt.axvline(x = mu22, c = 'cyan', ls = '--')
-
-    # hwhm estimates
-    plt.plot(cut_wavelengths, averaging_weights * max(data[:,1]) / max(averaging_weights) / 2, label = "scaled averaging weights", c = 'lime')
-    plt.axvline(x = hwhm, c = 'r', ls = '--', label = "hwhm estimate")
-    plt.axvline(x = hwhm + hwhm_err, c = 'orange', ls = '--', label = "hwhm error bounds")
-    plt.axvline(x = hwhm - hwhm_err, c = 'orange', ls = '--')
-
-    plt.legend()
-    plt.show()
 
 def check_against_voigt_pretty(data, weights, shift, noise_reduced = None, true_wavelength = None, threshold = 1/2):
     # data is processed data
@@ -191,7 +138,7 @@ def check_against_voigt_pretty(data, weights, shift, noise_reduced = None, true_
     
     hwhm, hwhm_err, averaging_weights = hwhm_max(data, weights, noise_reduced = noise_reduced, plot = False, threshold = threshold, give_weights= True)
 
-    unprocessed = (rp_unprocessed := fit_to_voigt(data, weights), rp2_unprocessed := fit_to_voigt(data, weights, shift = shift))
+    unprocessed = (fit_to_voigt(data, weights), fit_to_voigt(data, weights, shift = shift))
     processed = ({}, {})
     for i, rp_u in enumerate(unprocessed):
         for name, param in rp_u.items():
