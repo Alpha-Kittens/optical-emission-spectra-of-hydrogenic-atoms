@@ -194,17 +194,48 @@ plt.show()
 #Plotting all mercury
 directory = 'data/final_data/mercury/'
 folders = os.listdir(directory)
+#plt.axes().invert_xaxis()
 
 
+#plt.rcParams['figure.bgcolor'] = 'black'
+plt.title("Full mercury spectrum")
+
+#plt.axes.set_facecolor('black')
+#ax = plt.axes()
+#ax.set_facecolor('black')
+#plt.axes().set_xticks([])
+#plt.axes().set_yticks([])
 for folder in folders:
+    
     folder_fp = directory + folder + '/'
     files = os.listdir(folder_fp)
     for file in files:
         fp = folder_fp + file
+        cols = {
+            '3610_15': 'black',
+            '4046_56' : '#8200c8',
+            '5460_74' : '#99ff00',
+            '5769_6' : '#f6ff00',
+            '5790_66' : '#ffff00',
+            '3125_668' : 'black',
+            '3131_548' : 'black',
+            '3650_15' : 'black',
+            '3654_836' : 'black',
+            '4311_65' : '#3800ff',
+            '4347_494' : '#2300ff',
+            '4358_328' : '#1d00ff',
+            '5425_253' : '#8cff00',
+            '5677_105' : '#dbff00',
+            '6149_475' : '#ff8900',
+        }
+        #print (cols[file])
         data = data_loader.read_data(fp)
-        plt.plot(data[:, 0], data[:, 1], label=folder)
+        plt.plot(data[:, 0], data[:, 1], color = cols[file]) #label=file.replace('_', '.'))
         #plt.title(file)
-plt.legend()
+plt.xlabel("Monochromator reading (Ã)")
+plt.ylabel("PMT counts per second")
+#plt.xticks([6000, 5000, 4000, 3000])
+#plt.legend()
 plt.show()
 '''
 

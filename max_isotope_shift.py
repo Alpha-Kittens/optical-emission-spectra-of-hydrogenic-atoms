@@ -100,6 +100,8 @@ for key in information:
     wavelength["shift_error_sys"] = calibrate_splitting_error(uncalibrated_uncertainty_D, uncalibrated_uncertainty_H, uncalibrated_uncertainty_D, uncalibrated_uncertainty_H)[1]
 
     print('shift: ' + str(wavelength["shift"]))
+    print(wavelength["shift_error_stat"])
+    print(wavelength["shift_error_sys"])
 
     # Balmer Formula to find ratio of deuterium to proton mass
     wavelength["ratio"] = 1/(1 - R_inf*(m_p/m_e)*wavelength["shift"]*(10**(-10))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
