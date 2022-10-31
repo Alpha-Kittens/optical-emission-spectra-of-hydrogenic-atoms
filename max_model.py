@@ -78,10 +78,10 @@ def hwhm_max(data, weights, noise_reduced = None, plot = True, true_wavelength =
     w_err = np.sqrt(np.dot((cut_wavelengths - w_max)**2, averaging_weights) / np.sum(averaging_weights))
 
     if plot:
-        plt.title("hwhm max model on scan for "+str(true_wavelength))
+        plt.title("weighted sum model on scan for "+str(true_wavelength))
         plt.xlabel("Wavelength reading (A)")
         plt.ylabel("CPS")
-        plt.plot(cut_wavelengths, averaging_weights * max(data[:,1]) / max(averaging_weights), label = "scaled averaging weights", c = 'lime')
+        #plt.plot(cut_wavelengths, averaging_weights * max(data[:,1]) / max(averaging_weights), label = "scaled averaging weights", c = 'lime')
         plt.errorbar(data[data_below,0], data[data_below,1], yerr = weights[data_below], label = "excluded data", marker = '.', c = 'b', ls='none')
         plt.errorbar(cut_wavelengths, data[data_above,1], yerr = cut_weights, label = "included data", marker = '.', c = 'orange', ls='none')
         plt.axvline(x = w_max, label = "wavelength estimate", c = 'r', linestyle = '--')
@@ -173,10 +173,10 @@ def check_against_voigt_pretty(data, weights, shift, noise_reduced = None, true_
         #ax.axvline(x = hwhm - hwhm_err, c = 'red', ls = '--')
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
 
-    ax1.set_title("Comparison of hwhm_max, two voigt, and voigt models for "+str(true_wavelength))
+    ax1.set_title("Comparison of weighted sum, two voigt, and voigt models for "+str(true_wavelength))
     ax1.axvline(x = hwhm, c = 'red', label = "hwhm estimate", ls = '-')
-    ax1.plot(cut_wavelengths, averaging_weights * max(data[:,1]) / max(averaging_weights) / 2, label = "(scaled) averaging weights", c = 'lime')
-    ax1.axvline(x = hwhm + hwhm_err, c = 'red', ls = '--', label = "hwhm error bounds")
+    #ax1.plot(cut_wavelengths, averaging_weights * max(data[:,1]) / max(averaging_weights) / 2, label = "(scaled) averaging weights", c = 'lime')
+    ax1.axvline(x = hwhm + hwhm_err, c = 'red', ls = '--', label = "weighted sum error bounds")
     ax1.axvline(x = hwhm - hwhm_err, c = 'red', ls = '--')
 
     ax2.plot(x, v, c = 'cyan', label = "single voigt fit")

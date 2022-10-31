@@ -1,4 +1,5 @@
 #Imports
+from cmath import e
 import numpy as np
 import csv
 import math
@@ -101,6 +102,7 @@ def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, pl
 
     if plot:            
     #if True:
+        plt.title('Voigt Fit has reduced chi2 = ' + str(round(result.redchi, 2)))
         plt.errorbar(processed_data[:,0], processed_data[:,1], yerr = 1/weights, marker = '.', label = "data")
         plt.plot(processed_data[:,0], voigt_models['voigt_with_shift'][0](processed_data[:,0], amp, mu, alpha, gamma, a), label = "primary peak", color = "orange")
         if choice == 'two_voigt':
@@ -108,6 +110,8 @@ def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, pl
             plt.plot(processed_data[:,0], voigt_models[choice][0](processed_data[:,0], amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a), label = "full fit", color = "lime")
             plt.plot(processed_data[:,0], voigt_models['voigt_with_shift'][0](processed_data[:,0], amp2, mu2, alpha2, gamma2, a), label = "secondary peak", color = "green")
         plt.axvline(x = mu, label = "wavelength estimate", linestyle = '--', color = 'r')
+        plt.ylabel('counts per second')
+        plt.xlabel('uncalibrated angstroms')
         plt.legend()
         plt.show()
     print ("chi square: "+str(result.chisqr))
@@ -179,3 +183,108 @@ def fit (model, data, params=None, weights =None):
         result = model.fit(y_axis, params=params, x=x_axis, weights=weights, scale_covar = False)
     return result
 
+
+
+
+
+
+def fit_to_lorentzian(processed_data, weights, plot=True):
+    """
+    Given data from a scan, fits a lorentzian to it. Outdated--better to use voigt. 
+
+    Arguments:
+        * `processed_data` (nx2 numpy array): 2 columns. First is wavelength in angstroms, second is measured counts per second. 
+        * `weights`
+
+    Returns:
+        * `result` (ModelResult): returned by model.fit
+    """
+    #type of data is numpy array w/ 2 columns
+    def Lorentzian(x, amp, cen, scale, shift):
+        return amp * (1/(pi*scale))*(1/(1+(((x-cen)/scale)**2))) + shift
+    
+    
+    model = lmfit.Model(Lorentzian)
+    
+    x_axis = processed_data[:, 0]
+    y_axis = processed_data[:, 1]
+    
+    start_amp = max(y_axis)
+    start_cen = x_axis[np.argmax(y_axis)]
+    start_shift = min(y_axis)
+    
+    result = model.fit(y_axis, x=x_axis, weights=weights, amp=start_amp, cen=start_cen, scale=0.5, shift=start_shift)
+    
+    amp = result.best_values['amp']
+    cen = result.best_values['cen']
+    scale = result.best_values['scale']
+    shift = result.best_values['shift']
+
+
+    if plot:            
+    #if True:
+        plt.title('Lorentzian Fit has reduced chi2 = ' + str(round(result.redchi, 2)))
+        plt.errorbar(processed_data[:,0], processed_data[:,1], yerr = 1/weights, marker = '.', label = "data")
+        plt.plot(processed_data[:,0], Lorentzian(processed_data[:,0], amp, cen, scale, shift), label = "primary peak", color = "orange")
+        plt.axvline(x = cen, label = "wavelength estimate", linestyle = '--', color = 'r')
+        plt.ylabel('counts per second')
+        plt.xlabel('uncalibrated angstroms')
+        plt.legend()
+        plt.show()
+    print ("chi square: "+str(result.chisqr))
+    print ("chi square: "+str(result.redchi))
+
+    print(lmfit.fit_report(result))
+    
+    return result
+
+
+def fit_to_Gaussian(processed_data, weights, plot=True):
+    """
+    Given data from a scan, fits a lorentzian to it. Outdated--better to use voigt. 
+
+    Arguments:
+        * `processed_data` (nx2 numpy array): 2 columns. First is wavelength in angstroms, second is measured counts per second. 
+        * `weights`
+
+    Returns:
+        * `result` (ModelResult): returned by model.fit
+    """
+    #type of data is numpy array w/ 2 columns
+    def Gaussian(x, amp, cen, sigma, shift):
+        return amp * exp(-(1/2) * ((x-cen)/sigma)**2) + shift
+    
+    
+    model = lmfit.Model(Gaussian)
+    
+    x_axis = processed_data[:, 0]
+    y_axis = processed_data[:, 1]
+    
+    start_amp = max(y_axis)
+    start_cen = x_axis[np.argmax(y_axis)]
+    start_shift = min(y_axis)
+    
+    result = model.fit(y_axis, x=x_axis, weights=weights, amp=start_amp, cen=start_cen, sigma=0.5, shift=start_shift)
+    
+    amp = result.best_values['amp']
+    cen = result.best_values['cen']
+    sigma = result.best_values['sigma']
+    shift = result.best_values['shift']
+
+
+    if plot:            
+    #if True:
+        plt.title('Gaussian Fit has reduced chi2 = ' + str(round(result.redchi, 2)))
+        plt.errorbar(processed_data[:,0], processed_data[:,1], yerr = 1/weights, marker = '.', label = "data")
+        plt.plot(processed_data[:,0], Gaussian(processed_data[:,0], amp, cen, sigma, shift), label = "primary peak", color = "orange")
+        plt.axvline(x = cen, label = "wavelength estimate", linestyle = '--', color = 'r')
+        plt.ylabel('counts per second')
+        plt.xlabel('uncalibrated angstroms')
+        plt.legend()
+        plt.show()
+    print ("chi square: "+str(result.chisqr))
+    print ("chi square: "+str(result.redchi))
+
+    print(lmfit.fit_report(result))
+    
+    return result

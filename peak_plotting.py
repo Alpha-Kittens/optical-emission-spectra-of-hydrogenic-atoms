@@ -4,11 +4,12 @@ from calibration import *
 import numpy as np
 from data import data_loader
 from data_processing import process_data
-from fitters import fit_to_voigt
+from fitters import fit_to_voigt, fit_to_lorentzian, fit_to_Gaussian
 from max_model import hwhm_max
 from max_model import check_against_voigt_pretty
 import matplotlib.pyplot as plt
 import os
+import lmfit
 
 '''
 This file is created for making plots of things you want to show in presentation/paper
@@ -25,7 +26,7 @@ planck = 6.626e-34
 c = 2.998e8
 to_eV = 6.242e18
 
-'''
+
 # An arbritrary peak
 fp_alpha = 'data/final_data/hydrogen/alpha'
 
@@ -35,11 +36,13 @@ data = data_loader.read_data(fp_alpha)
 #plt.title("Hydrogen alpha = 6562.79 A")
 #plt.xlabel('Uncalibrated Angstroms')
 #plt.ylabel('Counts per second')
+'''
+processed_data, weights, noise_reduced = process_data(data, plot_noise_reduction=True, noise_reduced = True, title="Hydrogen alpha = 6562.79 A")
 
-#hwhm_max(processed_data, weights, noise_reduced, plot=True, true_wavelength='Hydrogen alpha = 6562.79 A')
+hwhm_max(processed_data, weights, noise_reduced, plot=True, true_wavelength='Hydrogen alpha = 6562.79 A')
 '''
 
-'''
+
 processed_data, weights = process_data(data, plot_noise_reduction=True, title="Hydrogen alpha = 6562.79 A")
 
 result_params = fit_to_voigt(processed_data, weights, plot=True)
@@ -56,9 +59,14 @@ line_width = to_Energy(result_params['mu'].value - result_params['gamma'].value)
 
 
 print("Line Width: " + str(line_width))
-'''
 
-'''
+result = fit_to_lorentzian(processed_data, weights)
+
+result_2 = fit_to_Gaussian(processed_data, weights)
+
+
+
+
 fig, (ax1, ax2) = plt.subplots(1, 2)
 fig.suptitle('Hydrogen alpha = 6562.79 A')
 ax1.plot(data[:, 0], data[:, 1])
@@ -78,7 +86,7 @@ ax2.set(xlabel='Uncalibrated Wavelength', ylabel='Uncalibrated Energy')
 
 
 plt.show()
-'''
+
 
 
 
@@ -86,8 +94,8 @@ plt.show()
 ###
 # PLOTTING DEUTREIUM SCANS
 ###
-'''
 #Plots of alpha from deuterium
+'''
 fp_alpha1 = 'data/final_data/interesting/alpha7L'
 fp_alpha2 = 'data/final_data/interesting/alpha6L'
 fp_alpha3 = 'data/final_data/interesting/alpha5L'
@@ -96,6 +104,8 @@ fp_alpha5 = 'data/final_data/interesting/alpha2L'
 fp_alpha6 = 'data/final_data/interesting/alpha1L'
 
 alpha_scans = [fp_alpha1, fp_alpha2, fp_alpha3, fp_alpha4, fp_alpha5, fp_alpha6]
+alpha_scans = [fp_alpha1, fp_alpha2, fp_alpha3, fp_alpha6]
+
 
 plt.title("Deuterium alpha = 6562.79 A")
 plt.xlabel('Uncalibrated Angstroms')
@@ -180,7 +190,7 @@ plt.show()
 '''
 
 
-
+'''
 #Plotting all mercury
 directory = 'data/final_data/mercury/'
 folders = os.listdir(directory)
@@ -196,8 +206,7 @@ for folder in folders:
         #plt.title(file)
 plt.legend()
 plt.show()
-
-
+'''
 
 # Plotting splits
 '''
@@ -226,5 +235,24 @@ processed_data, weights, noise_reduced = process_data(data, noise_reduced=True, 
 #fit_to_voigt(processed_data, weights, shift=0, plot=True)
 #fit_to_voigt(processed_data, weights, shift=0.2, plot=True)
 
-check_against_voigt_pretty(processed_data, weights, shift=0.2, noise_reduced=noise_reduced, true_wavelength= 'Mercury 3650.15 A linepyt')
+check_against_voigt_pretty(processed_data, weights, shift=0.2, noise_reduced=noise_reduced, true_wavelength= 'Mercury 3650.15 A line')
+
+
+
+# Plotting bumpy peaks
+'''
+'''
+folder = 'data/final_data/interesting/'
+bumpy_1 = folder + 'sodium_eH'
+bumpy_2 = folder + 'sodium_eL'
+bumpy_3 = folder + 'mercury_4311_65'
+bumpy_4 = folder + 'sodium_bfine'
+bumpy_5 = folder + 'sodium_aH'
+
+bumpy_peaks = [bumpy_1, bumpy_2, bumpy_3, bumpy_4, bumpy_5]
+
+for i in bumpy_peaks:
+    data = data_loader.read_data(i)
+
+    processsed_data, weights = process_data(data, plot_noise_reduction=True)
 '''

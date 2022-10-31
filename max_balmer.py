@@ -1,4 +1,5 @@
 # Imports
+from cProfile import label
 from data import data_loader
 import lmfit
 from data_processing import get_cutoff
@@ -93,6 +94,7 @@ for key in information:
     wavelength["wavelength"] = true_wavelength
     wavelength["wavelength_unc_sys"] = true_uncertainty_sys
     wavelength["wavelength_unc_stat"] = true_uncertainty_stat
+    wavelength['wavelength_unc_tot'] = math.sqrt(true_uncertainty_sys**2 + true_uncertainty_stat**2)
 
     print("Systematic uncertainty: " + str(wavelength["wavelength_unc_sys"]))
     print("Statistical uncertainty: " + str(wavelength["wavelength_unc_stat"]))
@@ -109,39 +111,6 @@ for key in information:
     # Rydberg Calculated from Reference values
     wavelength["ref_R_H"] = 1/(((wavelength["reference"])*(10**(-10)))*((1/(nf**2)) - (1/(wavelength["ni"]**2))))
 
-
-
-    '''
-    OLD CODE
-    # Noise reduction and find Uncertainties
-    new_data, weights = noise_reduction.reduce_noise(data, damping_constants[key]) # damping constant default is 1/10
-
-
-    # Voigt Model & Fit
-    x_axis = data[:, 0]
-    y_axis = data[:, 1]
-
-    #model = lmfit.models.VoigtModel()
-    model = lmfit.Model(models.voigt_with_shift)
-    #model = models.two_voigts() #not working
-
-    #params = models.voigt_params(model, data)
-    params = models.voigt_shift_params(data)
-    #params = models.two_voigt_params(model, data) #not working
-
-    result = fit(model, data, params, weights)
-    #result = fit(model, data, params)
-
-    #lmfit.report_fit(result)
-        
-    print(lmfit.fit_report(result))
-
-
-    result.plot(datafmt = '.')
-    plt.plot(x_axis, new_data[:,1], '-', color = 'r', label = 'noise-reduced')
-    plt.legend()
-    plt.show()
-    '''
 
 
 # Weighted Average
@@ -168,8 +137,6 @@ for key in information:
 uncertainty_sys = 1/math.sqrt(denominator_sys)
 uncertainty_stat = 1/math.sqrt(denominator_stat)
 
-print(1/math.sqrt(1/(uncertainty_sys**2) + 1(uncertainty_stat**2)))
-
 
 '''
 #Standard Deviation
@@ -192,11 +159,12 @@ results = {
 
 print(results)
 
-'''
+
 #Make a plot
 n = []
 wavelengths = []
 errors = []
+errors_stat = []
 references = []
 residuals = []
 
@@ -206,14 +174,19 @@ for key in information:
     wavelengths.append(wavelength["wavelength"])
     references.append(wavelength["reference"])
     residuals.append(wavelength["wavelength"] - wavelength["reference"])
-    errors.append(math.sqrt(wavelength["wavelength_unc_stat"]**2 + wavelength["wavelength_unc_sys"]**2))
+    errors_stat.append(wavelength["wavelength_unc_stat"])
+    errors.append(wavelength["wavelength_unc_tot"])
 
 #plt.errorbar(n, wavelengths, errors, fmt='o')
 #plt.errorbar(n, references, fmt='o')
-plt.errorbar(n, residuals,errors, fmt='o')
 plt.axhline(y = 0, c = 'r', ls = '--')
+plt.errorbar(n, residuals,errors, fmt='o', label='total error', color = 'orange')
+plt.errorbar(n, residuals,errors_stat, fmt='o', label = 'statistical error', color='blue')
+plt.errorbar(n, residuals, fmt='o', color='black')
 plt.xlabel('initial n')
+plt.xticks([3,4,5,6])
 plt.ylabel('(measured wavelength - reference value) (A)')
+plt.legend()
 plt.show()
 
 
@@ -248,22 +221,29 @@ for i in range(0, len(n)):
 
 result = fit(model=rydberg_model, data= balmer_data, weights=weights)
 
+
+
 # Errors rescaled
 errors_m = []
 for i in errors:
-    errors_m.append(i * (1e-8)) # errors times 100
+    errors_m.append(i * (1e-10) * 500) # errors times 100
 
-plt.errorbar(balmer_data[:, 0], balmer_data[:, 1], errors_m, fmt='o')
+plt.errorbar(balmer_data[:, 0], balmer_data[:, 1], errors_m, fmt='o', label='measured wavelength')
 x=np.linspace(min(balmer_data[:,0]), max(balmer_data[:,0]), 1000)
 y=[]
 for i in x:
     y.append(models.rydberg_model(i, result.best_values['a']))
 plt.plot(x, y)
+plt.ylabel('Wavelength (A)')
+plt.xlabel('initial n')
+plt.xticks([3, 4, 5, 6])
+plt.legend()
 plt.show()
 
 
 print(lmfit.fit_report(result))
 
+'''
 balmer_ref_data = np.zeros(shape=(len(n), 2))
 for i in range(0, len(n)):
     balmer_ref_data[i, 0] = n[i]

@@ -10,7 +10,6 @@ import lmfit
 
 import data.data_loader as loader
 
-loader.read_data()
 
 def fit_to_lorentzian(data):
     """
@@ -23,8 +22,8 @@ def fit_to_lorentzian(data):
         * `result` (ModelResult): returned by model.fit
     """
     #type of data is numpy array w/ 2 columns
-    def Lorentzian(x, amp, cen, scale):
-        return amp * (1/(pi*scale))*(1/(1+(((x-cen)/scale)**2)))
+    def Lorentzian(x, amp, cen, scale, shift):
+        return amp * (1/(pi*scale))*(1/(1+(((x-cen)/scale)**2))) + shift
     
     
     model = lmfit.Model(Lorentzian)
@@ -34,8 +33,9 @@ def fit_to_lorentzian(data):
     
     start_amp = max(y_axis)
     start_cen = x_axis[np.argmax(y_axis)]
+    start_shift = min(y_axis)
     
-    result = model.fit(y_axis, x=x_axis, amp=start_amp, cen=start_cen, scale=0.5)
+    result = model.fit(y_axis, x=x_axis, amp=start_amp, cen=start_cen, scale=0.5, shift=start_shift)
     
     
     return result
