@@ -206,3 +206,5 @@ plt.errorbar(wavelengths, splittings, syserrors, fmt = 'o', label = "Systematic 
 plt.text(4500, 0.001, "Average value: (%.6f ± " % weighted_average + "%6f) eV" % weighted_uncertainty, fontsize = 12)
 plt.legend(loc = "upper left")
 plt.show()
+
+print (true)

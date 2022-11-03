@@ -349,6 +349,7 @@ if __name__ == '__main__':
     check_fits = False
     sus_peaks = [check_4311_65, check_5677_105, check_3131_548]
     #sus_peaks = []
+
     
     for wavelength in main_peaks + check_peaks + H:
 
@@ -412,15 +413,16 @@ if __name__ == '__main__':
 
     plt.title("Calibration Data")
     plt.xlabel("Monochrometer reading (Ã)")
-    plt.ylabel("True wavelength (A)")
-    plt.errorbar(x = measured['reference'], y = true_wavelengths, xerr = 1/weights, marker = '.', ls = 'none', label = "Calibration data", c = 'b')
+    plt.ylabel("Monochrometer reading - True wavelength (A)")
+    plt.errorbar(x = measured['reference'], y = np.array(measured['reference']) - np.array(true_wavelengths), xerr = 1/weights, marker = '.', ls = 'none', label = "Calibration data", c = 'b')
     xmin = min(measured['reference'])
     xmax = max(measured['reference'])
     if check != []:
         xmin = min(xmin, min(check[0]))
         xmax = max(xmax, max(check[0]))
-        plt.errorbar(x = check[0], y = check[1], xerr = check[2], marker = '.', ls = 'none', label = "H data", c = 'magenta')
+        plt.errorbar(x = check[0], y = np.array(check[0]) - np.array(check[1]), xerr = check[2], marker = '.', ls = 'none', label = "H data", c = 'magenta')
     x = np.linspace(xmin - 100, xmax + 100, 1000)
+    #plt.axhline(y = 0, c = 'r', ls = '--')
     plt.legend()
     plt.show()
 
@@ -439,7 +441,7 @@ if __name__ == '__main__':
 
     minchi = 10
     mindetails = None
-    exclude = [4]
+    exclude = [4,5]
     for details, result in results.items():
         if result[3] < minchi:
             if mindetails is not None:
@@ -454,7 +456,8 @@ if __name__ == '__main__':
     print (minchi)
     print (mindetails)
 
-    winner = mindetails
+    winner = (0,2)
+    #mindetails
 
     slope = results[winner][0]['b']
     print (slope)
