@@ -45,7 +45,7 @@ def reduce_noise (data, damping_constant = 1/10, plot = False, title=None):
         plt.scatter(x, y, marker = '.', label="raw data")
         #plt.plot(x, new_data, c = 'r')
         plt.plot(x, new_data, c = 'red', label="noise reduced")
-        plt.xlabel('Uncalibrated Angstroms')
+        plt.xlabel('Monochromator Step')
         plt.ylabel('Counts per second')        
         plt.legend()
         if title is not None:

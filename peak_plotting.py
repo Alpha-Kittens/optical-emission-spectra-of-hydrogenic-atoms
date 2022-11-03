@@ -26,26 +26,34 @@ planck = 6.626e-34
 c = 2.998e8
 to_eV = 6.242e18
 
-
+'''
 # An arbritrary peak
 fp_alpha = 'data/final_data/hydrogen/alpha'
 
 #Plot raw data
 data = data_loader.read_data(fp_alpha)
-#plt.plot(data[:, 0], data[:, 1])
-#plt.title("Hydrogen alpha = 6562.79 A")
-#plt.xlabel('Uncalibrated Angstroms')
-#plt.ylabel('Counts per second')
+
+plt.scatter(data[:, 0], data[:, 1], marker='.')
+errors = []
+for i in data[:, 1]:
+    errors.append(sqrt(i))
+
+#plt.errorbar(data[:, 0], data[:, 1], yerr=np.array(errors) * 10, fmt = 'o', ls='none')
+plt.title("Hydrogen alpha = 6562.79 A")
+plt.xlabel('Monochromator Step')
+plt.ylabel('Counts per second')
+plt.show()
+'''
 '''
 processed_data, weights, noise_reduced = process_data(data, plot_noise_reduction=True, noise_reduced = True, title="Hydrogen alpha = 6562.79 A")
 
 hwhm_max(processed_data, weights, noise_reduced, plot=True, true_wavelength='Hydrogen alpha = 6562.79 A')
 '''
 
+'''
+processed_data, weights, noise_reduced = process_data(data, plot_noise_reduction=True, noise_reduced = True, title="Hydrogen alpha = 6562.79 A")
 
-processed_data, weights = process_data(data, plot_noise_reduction=True, title="Hydrogen alpha = 6562.79 A")
-
-result_params = fit_to_voigt(processed_data, weights, plot=True)
+result_params = fit_to_voigt(processed_data, weights, plot=True,title="Hydrogen alpha = 6562.79 A" )
 
 print(result_params['mu'].value)
 
@@ -86,7 +94,7 @@ ax2.set(xlabel='Uncalibrated Wavelength', ylabel='Uncalibrated Energy')
 
 
 plt.show()
-
+'''
 
 
 
@@ -108,7 +116,7 @@ alpha_scans = [fp_alpha1, fp_alpha2, fp_alpha3, fp_alpha6]
 
 
 plt.title("Deuterium alpha = 6562.79 A")
-plt.xlabel('Uncalibrated Angstroms')
+plt.xlabel('Monochromator Step')
 plt.ylabel('Counts per second')
 for i in range(len(alpha_scans)):
     data = data_loader.read_data(alpha_scans[i])
@@ -134,7 +142,7 @@ fp_mercury2 = 'data/final_data/interesting/mercury_4046_56_bulb2'
 mercury_scans_4046_56 = [fp_mercury1, fp_mercury2]
 
 plt.title("Mercury scans for 4046.56 A Line")
-plt.xlabel('Uncalibrated Angstroms')
+plt.xlabel('Monochromator Step')
 plt.ylabel('Counts per second')
 for i in range(len(mercury_scans_4046_56)):
     data = data_loader.read_data(mercury_scans_4046_56[i])
@@ -153,7 +161,7 @@ fp_mercury2 = 'data/final_data/interesting/mercury_3650_15_2'
 mercury_scans_3650_15 = [fp_mercury1, fp_mercury2]
 
 plt.title("Mercury scans for 3650.15 A Line")
-plt.xlabel('Uncalibrated Angstroms')
+plt.xlabel('Monochromator Step')
 plt.ylabel('Counts per second')
 for i in range(len(mercury_scans_3650_15)):
     data = data_loader.read_data(mercury_scans_3650_15[i])
@@ -241,20 +249,21 @@ plt.show()
 
 # Plotting splits
 '''
-split_1 = 'data/final_data/interesting/mercury_3131_548'
+split_1 = 'data/final_data/interesting/mercury_4358_328'
 data = data_loader.read_data(split_1)
 plt.plot(data[:, 0], data[:, 1])
 plt.xlabel('Uncalibrated Angstroms')
 plt.ylabel('Counts per second')
-plt.title("Mercury Scan for 3131.48 A Line")
+plt.title("Mercury 4356_328 A line")
 plt.show()
 
 processed_data, weights = process_data(data, plot_noise_reduction=True)
-fit_to_voigt(processed_data, weights, shift=0.4, plot=True)
+fit_to_voigt(processed_data, weights, shift=0, plot=True, title = 'Mercury 4356.328 A line')
+fit_to_voigt(processed_data, weights, shift=0.1, plot=True, title = 'Mercury 4356.328 A line')
 '''
 
-'''
-split_1 = 'data/final_data/interesting/mercury_3650_15_1'
+
+split_1 = 'data/final_data/interesting/mercury_3131_548'
 data = data_loader.read_data(split_1)
 #plt.plot(data[:, 0], data[:, 1])
 #plt.xlabel('Uncalibrated Angstroms')
@@ -266,12 +275,12 @@ processed_data, weights, noise_reduced = process_data(data, noise_reduced=True, 
 #fit_to_voigt(processed_data, weights, shift=0, plot=True)
 #fit_to_voigt(processed_data, weights, shift=0.2, plot=True)
 
-check_against_voigt_pretty(processed_data, weights, shift=0.2, noise_reduced=noise_reduced, true_wavelength= 'Mercury 3650.15 A line')
+check_against_voigt_pretty(processed_data, weights, shift=0.2, noise_reduced=noise_reduced, threshold=1/3, true_wavelength= 'Mercury 3650.15 A line')
 
 
 
 # Plotting bumpy peaks
-'''
+
 '''
 folder = 'data/final_data/interesting/'
 bumpy_1 = folder + 'sodium_eH'

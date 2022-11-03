@@ -137,7 +137,7 @@ def voigt(x, amp, mu, alpha, gamma):
     """
     Voigt, i.e. gaussian convolved with lorentzian
 
-    Argumetns:
+    Arguments:
         * `x` : parameter value to evaluate the function at
         * `amp` : amplitude of distribution
         * `mu` : center of distribution
@@ -151,6 +151,7 @@ def voigt(x, amp, mu, alpha, gamma):
     sigma = alpha / np.sqrt(2 * np.log(2))
 
     return amp * np.real(wofz((x - mu + 1j*gamma)/sigma/np.sqrt(2))) / sigma / np.sqrt(2*np.pi)
+
 
 def voigt_extract(result):
 

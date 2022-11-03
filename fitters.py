@@ -74,7 +74,7 @@ def execute_peak_fit(data, shift = 0, plot = False):
 # Also returns the entire result cuz its useful
 #
 
-def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, plot = False):
+def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, plot = False, title = None):
     
     if shift == 0:
         choice = 'voigt_with_shift'
@@ -102,16 +102,18 @@ def fit_to_voigt(processed_data, weights, shift = 0, damping_constant = 1/10, pl
 
     if plot:            
     #if True:
-        plt.title('Voigt Fit has reduced chi2 = ' + str(round(result.redchi, 2)))
-        plt.errorbar(processed_data[:,0], processed_data[:,1], yerr = 1/weights, marker = '.', label = "data")
+        #plt.title('Voigt Fit has reduced chi2 = ' + str(round(result.redchi, 2)))
+        if title is not None:
+            plt.title(title)
+        plt.errorbar(processed_data[:,0], processed_data[:,1], yerr = 1/weights, marker = '.', label = "data", ls = 'none')
         plt.plot(processed_data[:,0], voigt_models['voigt_with_shift'][0](processed_data[:,0], amp, mu, alpha, gamma, a), label = "primary peak", color = "orange")
         if choice == 'two_voigt':
             amp2, mu2, alpha2, gamma2 = result.params['amp2'].value, result.params['mu2'].value, result.params['alpha2'].value, result.params['gamma2'].value
             plt.plot(processed_data[:,0], voigt_models[choice][0](processed_data[:,0], amp, mu, alpha, gamma, amp2, mu2, alpha2, gamma2, a), label = "full fit", color = "lime")
             plt.plot(processed_data[:,0], voigt_models['voigt_with_shift'][0](processed_data[:,0], amp2, mu2, alpha2, gamma2, a), label = "secondary peak", color = "green")
         plt.axvline(x = mu, label = "wavelength estimate", linestyle = '--', color = 'r')
-        plt.ylabel('counts per second')
-        plt.xlabel('uncalibrated angstroms')
+        plt.ylabel('Counts per second')
+        plt.xlabel('Monochromator Step')
         plt.legend()
         plt.show()
     print ("chi square: "+str(result.chisqr))

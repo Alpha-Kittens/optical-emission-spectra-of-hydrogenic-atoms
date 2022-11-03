@@ -166,7 +166,7 @@ def check_against_voigt_pretty(data, weights, shift, noise_reduced = None, true_
 
     for ax in axes:
         #ax.set_xlabel("Wavelength reading (A)")
-        ax.set_ylabel("CPS")
+        ax.set_ylabel("cps")
         ax.errorbar(data[data_below,0], data[data_below,1], yerr = weights[data_below], label = "excluded data" if ax == ax1 else None, marker = '.', c = 'black', ls='none')
         ax.errorbar(cut_wavelengths, data[data_above,1], yerr = cut_weights, label = "included data" if ax == ax1 else None, marker = '.', c = 'orange' if ax == ax1 else 'black', ls='none')    
         #ax.axvline(x = hwhm + hwhm_err, c = 'red', ls = '--', label = "hwhm error bounds")
@@ -187,7 +187,7 @@ def check_against_voigt_pretty(data, weights, shift, noise_reduced = None, true_
         ax3.axvline(x = mu21, c = 'purple', ls = '--', label = "double voigt peaks")
         ax3.axvline(x = mu22, c = 'purple', ls = '--')
 
-    axes[-1].set_xlabel("Wavelength reading (A)")
+    axes[-1].set_xlabel("Monochromator Step")
     for ax in axes:
         ax.legend(loc = 'upper right')
 

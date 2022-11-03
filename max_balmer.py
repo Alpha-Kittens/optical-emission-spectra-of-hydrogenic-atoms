@@ -172,6 +172,7 @@ for key in information:
     wavelength = information[key]
     n.append(wavelength["ni"])
     wavelengths.append(wavelength["wavelength"])
+    print(key + str(wavelength['wavelength']))
     references.append(wavelength["reference"])
     residuals.append(wavelength["wavelength"] - wavelength["reference"])
     errors_stat.append(wavelength["wavelength_unc_stat"])
@@ -257,3 +258,6 @@ print(lmfit.fit_report(result))
 
 '''
 # Write to a file (to be read by isotope shift)
+
+for key in information:
+    print(information[key])
