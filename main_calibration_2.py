@@ -7,6 +7,7 @@ import lmfit
 import numpy as np
 from max_model import hwhm_max
 from calibration_models import *
+import scipy.stats as stats
 
 
 #this might be buggy. I'm sorry, I totally ran out of energy
@@ -304,6 +305,7 @@ def do_calibration(measured, true, weights, n_poly, include_exp, plot = True, ch
 def cwrite(file, key, mean, params, errs):
     # in retrospect, I could have just made the calibration models detect which model is used based on parameter names. But oh well. 
     with open(file, 'w') as f:
+        print ("now writing")
         f.write("from calibration_models import *\n")
         f.write("from numpy import sqrt, abs\n")
         f.write("params = " + str(params) + "\n")
@@ -316,14 +318,38 @@ def cwrite(file, key, mean, params, errs):
             f.write("calibrate_error = lambda x, x_err : model_poly_err("+str(mean)+", params, errors)(x, x_err)\n")
         f.write("calibrate_splitting = lambda x1, x2 : calibrate(x2) - calibrate(x1)\n")
         f.write("calibrate_splitting_error = lambda x1, x2, x1_err, x2_err : (sqrt(calibrate_error(x1, x1_err)[0]**2 + calibrate_error(x2, x2_err)[0]**2), abs(calibrate_error(x1, x1_err)[1] - calibrate_error(x2, x2_err)[1]))\n")
+        f.flush()
 
-            
+def residual2(iY, iFunc, iYerr):
+    residual = iY - iFunc
+    return np.sum(residual**2)
+
+def ftest(iY,iYerr,f1,f2,ndof1,ndof2):
+    r1=residual2(iY,f1,iYerr)
+    r2=residual2(iY,f2,iYerr)
+    sigma2group=(r1-r2)/(ndof2-ndof1)
+    sigma2=r2/(len(iY)-ndof2)
+    return sigma2group/sigma2
+
+def fcomp(eval1, eval2, degree1, degree2):
+
+    fab = ftest(true_wavelengths, error['reference'], eval1, eval2, degree1+1, degree2+1)
+    f = 1-stats.f.cdf(fab, 1, len(measured['reference']) - 1)
+    return f
+
+def eval(x, exp, params):
+    if exp: 
+        pass
+        #return both(x)
+    else:
+        return poly(np.array(x), mean, **params)
 
 if __name__ == '__main__':
 
-    check_fits = True
-    sus_peaks = [check_4311_65, check_5677_105]
-
+    check_fits = False
+    sus_peaks = [check_4311_65, check_5677_105, check_3131_548]
+    #sus_peaks = []
+    
     for wavelength in main_peaks + check_peaks + H:
 
             entry = read_data(wavelength["fp"]) 
@@ -362,7 +388,7 @@ if __name__ == '__main__':
             print ("Estimated peak: " + str(measured['reference'][i - offset]))
             print ("Uncertainty: " + str(error['reference'][i - offset]))
             print ("---")
-        else:
+        else:         
             offset += 1
     print ("Check (H) peaks:")
     true_H_wavelengths = []
@@ -384,25 +410,52 @@ if __name__ == '__main__':
 
     x = np.linspace(min(min(measured['reference']),min(measured['check'])), max(max(measured['reference']),max(measured['check'])), 1000)
 
+    plt.title("Calibration Data")
+    plt.xlabel("Monochrometer reading (Ã)")
+    plt.ylabel("True wavelength (A)")
+    plt.errorbar(x = measured['reference'], y = true_wavelengths, xerr = 1/weights, marker = '.', ls = 'none', label = "Calibration data", c = 'b')
+    xmin = min(measured['reference'])
+    xmax = max(measured['reference'])
+    if check != []:
+        xmin = min(xmin, min(check[0]))
+        xmax = max(xmax, max(check[0]))
+        plt.errorbar(x = check[0], y = check[1], xerr = check[2], marker = '.', ls = 'none', label = "H data", c = 'magenta')
+    x = np.linspace(xmin - 100, xmax + 100, 1000)
+    plt.legend()
+    plt.show()
+
     results = {}
-    for include_exp in (False, True):
+    evals = {}
+    for include_exp in [False]: #(False, True):
         ekey = 1 if include_exp else 0
         for degree in range(1, 7):
-            results[(ekey, degree)] = do_calibration(measured['reference'], true_wavelengths, weights, degree, include_exp, check = check, plot = False)
+            results[(ekey, degree)] = do_calibration(measured['reference'], true_wavelengths, weights, degree, include_exp, check = check, plot = False)#(degree == 5 or degree == 2))
             params, errs, chisqr, redchi = results[(ekey, degree)] 
             #plt.plot(x, model_poly(mean)(x, results[(ekey, degree)]), label = "calibration curve", c = 'r')
             #plt.errorbar(measured['reference'], true_wavelengths, xerr = )
+            evals[(ekey, degree)] = eval(measured['reference'], ekey == 1, params)
+
+
 
     minchi = 10
     mindetails = None
+    exclude = [4]
     for details, result in results.items():
         if result[3] < minchi:
-            minchi = result[3]
-            mindetails = details
+            if mindetails is not None:
+                f = fcomp(evals[mindetails], evals[details], mindetails[1], details[1])
+                print ("Degree "+str(mindetails[1])+" vs "+str(details[1])+": "+str(f))
+                if f < 2 and details[1] not in exclude:
+                    minchi = result[3]
+                    mindetails = details
+            else:
+                minchi = result[3]
+                mindetails = details
     print (minchi)
     print (mindetails)
 
-    winner = (0,3)
+    winner = mindetails
+
     slope = results[winner][0]['b']
     print (slope)
     print (results[winner][0])
@@ -410,7 +463,9 @@ if __name__ == '__main__':
     params, errs, chisqr, redchi = do_calibration(measured['reference'], true_wavelengths, slope * weights, winner[1], winner[0] == 1, check = check, plot = False)
     print (params)
     print (errs)
-    cwrite("calibration_test.py", winner, mean, params, errs)
+    print (winner)
+    cwrite("calibration.py", winner, mean, params, errs)
+    
     #cwrite("calibration.py", winner, mean, results[winner][0], results[winner][1])
 
 

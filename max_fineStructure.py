@@ -117,7 +117,6 @@ for key in information:
     #wavelength["sys_splitting_uncertainty"] = calibrate_splitting_error(wavelength["unc_wavelength_1"], wavelength["unc_wavelength_2"], wavelength["unc_uncertainty_1"], wavelength["unc_uncertainty_2"])[1]
     #wavelength["splitting_uncertainty_tot"] = sqrt(wavelength["stat_splitting_uncertainty"]**2 + wavelength["sys_splitting_uncertainty"]**2)
 
-
     print("Splitting: " + str(wavelength['splitting']))
     print("Spliting Error: " + str(wavelength['splitting_uncertainty_tot']))
 
